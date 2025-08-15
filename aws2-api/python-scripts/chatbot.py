@@ -98,42 +98,118 @@ def extract_datetime_strings(s: str):
         # 8월 11일 14시 00분 (연도 없음)  
         r"(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(\d{1,2})\s*시\s*(\d{1,2})\s*분",
         # 8월 11일 14시 (연도 없음)
-        r"(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(\d{1,2})\s*시"
+        r"(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(\d{1,2})\s*시",
+        # 8월 11일 (연도 없음, 시간 없음)
+        r"(\d{1,2})\s*월\s*(\d{1,2})\s*일",
+        # 단독 시간 패턴 - 오후 2시, 오전 10시 등
+        r"(오전|오후)\s*(\d{1,2})\s*시",
+        # 단독 시간 패턴 - 2시, 10시 등 (숫자만)
+        r"(\d{1,2})\s*시"
     ]
     
-    for i, pattern in enumerate(korean_patterns):
-        m = re.search(pattern, s)
-        if m:
-            groups = m.groups()
-            if i < 3:  # 연도가 포함된 패턴 (0, 1, 2)
-                y, mo, d = int(groups[0]), int(groups[1]), int(groups[2])
-                h = int(groups[3]) if len(groups) > 3 and groups[3] else 0
-                mi = int(groups[4]) if len(groups) > 4 and groups[4] else 0
-            elif i == 3:  # "8월 11일 14시 1분의" 패턴 (초 무시)
-                y = datetime.now().year
-                mo, d = int(groups[0]), int(groups[1])
-                h = int(groups[2]) if len(groups) > 2 and groups[2] else 0
-                mi = int(groups[3]) if len(groups) > 3 and groups[3] else 0
-            elif i >= 4 and i <= 5:  # 오전/오후 패턴 (4, 5번 패턴)
-                y = datetime.now().year
-                mo, d = int(groups[0]), int(groups[1])
-                ampm = groups[2]  # 오전/오후
-                h = int(groups[3]) if len(groups) > 3 and groups[3] else 0
-                mi = int(groups[4]) if len(groups) > 4 and groups[4] else 0
+    # 1단계: 완전한 날짜+시간 패턴을 먼저 찾아서 기준 날짜 설정
+    base_date = None
+    found_times = set()
+    
+    # 완전한 날짜+시간 패턴들 (0-8번, 새로 추가된 월일 패턴 포함)
+    for i, pattern in enumerate(korean_patterns[:9]):
+        matches = re.findall(pattern, s)
+        for match in matches:
+            groups = match if isinstance(match, tuple) else (match,)
+            try:
+                if i < 3:  # 연도가 포함된 패턴 (0, 1, 2)
+                    y, mo, d = int(groups[0]), int(groups[1]), int(groups[2])
+                    h = int(groups[3]) if len(groups) > 3 and groups[3] else 0
+                    mi = int(groups[4]) if len(groups) > 4 and groups[4] else 0
+                elif i == 3:  # "8월 11일 14시 1분의" 패턴 (초 무시)
+                    y = datetime.now().year
+                    mo, d = int(groups[0]), int(groups[1])
+                    h = int(groups[2]) if len(groups) > 2 and groups[2] else 0
+                    mi = int(groups[3]) if len(groups) > 3 and groups[3] else 0
+                elif i >= 4 and i <= 5:  # 오전/오후 패턴 (4, 5번 패턴)
+                    y = datetime.now().year
+                    mo, d = int(groups[0]), int(groups[1])
+                    ampm = groups[2]  # 오전/오후
+                    h = int(groups[3]) if len(groups) > 3 and groups[3] else 0
+                    mi = int(groups[4]) if len(groups) > 4 and groups[4] else 0
+                    
+                    # 오전/오후 처리
+                    if ampm == "오후" and h != 12:
+                        h += 12
+                    elif ampm == "오전" and h == 12:
+                        h = 0
+                elif i >= 6 and i <= 7:  # 연도가 없는 일반 패턴
+                    y = datetime.now().year
+                    mo, d = int(groups[0]), int(groups[1])
+                    h = int(groups[2]) if len(groups) > 2 and groups[2] else 0
+                    mi = int(groups[3]) if len(groups) > 3 and groups[3] else 0
+                elif i == 8:  # 8월 11일 (연도 없음, 시간 없음)
+                    y = datetime.now().year
+                    mo, d = int(groups[0]), int(groups[1])
+                    h = 0  # 시간이 없으므로 0시로 설정
+                    mi = 0
+                
+                # 기준 날짜 설정 (첫 번째로 찾은 완전한 날짜)
+                if base_date is None:
+                    base_date = (y, mo, d)
+                
+                time_str = f"{y:04d}-{mo:02d}-{d:02d} {h:02d}:{mi:02d}"
+                if time_str not in found_times:
+                    found_times.add(time_str)
+                    out.append(time_str)
+            except (ValueError, IndexError):
+                continue
+    
+    # 2단계: 시간만 있는 패턴들을 기준 날짜와 함께 처리 (9, 10번)
+    if base_date:
+        y, mo, d = base_date
+        
+        # 9번 패턴: 오전/오후 단독 시간 (우선 처리)
+        pattern = korean_patterns[9]
+        matches = re.findall(pattern, s)
+        processed_hours = set()  # 이미 처리된 시간 추적
+        
+        for match in matches:
+            groups = match if isinstance(match, tuple) else (match,)
+            try:
+                ampm = groups[0]  # 오전/오후
+                h = int(groups[1]) if len(groups) > 1 and groups[1] else 0
+                mi = 0
                 
                 # 오전/오후 처리
                 if ampm == "오후" and h != 12:
                     h += 12
                 elif ampm == "오전" and h == 12:
                     h = 0
-            else:  # 연도가 없는 일반 패턴 (현재 연도로 가정)
-                y = datetime.now().year
-                mo, d = int(groups[0]), int(groups[1])
-                h = int(groups[2]) if len(groups) > 2 and groups[2] else 0
-                mi = int(groups[3]) if len(groups) > 3 and groups[3] else 0
-            
-            out.append(f"{y:04d}-{mo:02d}-{d:02d} {h:02d}:{mi:02d}")  # 시/분까지만
-            break  # 첫 번째 매치만 사용
+                
+                processed_hours.add(h)  # 처리된 시간 기록
+                time_str = f"{y:04d}-{mo:02d}-{d:02d} {h:02d}:{mi:02d}"
+                if time_str not in found_times:
+                    found_times.add(time_str)
+                    out.append(time_str)
+            except (ValueError, IndexError):
+                continue
+        
+        # 10번 패턴: 숫자 단독 시간 (오전/오후가 명시되지 않은 경우만)
+        pattern = korean_patterns[10]
+        matches = re.findall(pattern, s)
+        
+        for match in matches:
+            try:
+                h = int(match) if match else 0
+                mi = 0
+                
+                # 이미 오전/오후로 처리된 시간은 건너뛰기
+                # 또한 오후 시간으로 처리된 것(h+12)도 고려
+                if h in processed_hours or (h + 12) in processed_hours:
+                    continue
+                
+                time_str = f"{y:04d}-{mo:02d}-{d:02d} {h:02d}:{mi:02d}"
+                if time_str not in found_times:
+                    found_times.add(time_str)
+                    out.append(time_str)
+            except (ValueError, IndexError):
+                continue
     
     return out
 
@@ -166,6 +242,23 @@ def hour_bucket_requested(query: str) -> bool:
     if minute_requested(q):
         return False
     return bool(re.search(r"(\d{1,2})\s*시", q))
+
+def hourly_average_requested(query: str) -> bool:
+    """시간별 평균을 요청하는지 확인"""
+    query_lower = query.lower()
+    
+    # 평균 관련 키워드
+    avg_patterns = ["평균", "average", "avg"]
+    # 시간 관련 키워드
+    hour_patterns = ["시간", "시", "hour", "전체", "그시간", "해당시간"]
+    
+    has_avg = any(pattern in query_lower for pattern in avg_patterns)
+    has_hour_context = any(pattern in query_lower for pattern in hour_patterns)
+    
+    # 명시적으로 일간이 아니고, 평균과 시간 관련 키워드가 있으면 true
+    not_daily = not any(word in query_lower for word in ["일평균", "하루평균", "일간", "하루", "daily", "day"])
+    
+    return has_avg and has_hour_context and not_daily
 
 def daily_summary_requested(query: str) -> bool:
     """일간 요약을 요청하는지 확인"""
@@ -1450,16 +1543,28 @@ LAST_SENSOR_CTX: Dict[str, object] = {
     "label": None    # "해당 분" 등
 }
 
-def _reset_last_ctx():
-    LAST_SENSOR_CTX.update({"window": None, "start": None, "end": None, "rows": None, "tag": None, "label": None})
+def _reset_last_ctx(session=None):
+    if session:
+        session.clear_last_sensor_ctx()
+    else:
+        LAST_SENSOR_CTX.update({"window": None, "start": None, "end": None, "rows": None, "tag": None, "label": None})
 
-def _set_last_ctx(window: str, start: datetime, end: datetime, rows: List[dict], tag: str, label: str):
-    LAST_SENSOR_CTX["window"] = window
-    LAST_SENSOR_CTX["start"] = start
-    LAST_SENSOR_CTX["end"] = end
-    LAST_SENSOR_CTX["rows"] = rows
-    LAST_SENSOR_CTX["tag"] = tag
-    LAST_SENSOR_CTX["label"] = label
+def _set_last_ctx(window: str, start: datetime, end: datetime, rows: List[dict], tag: str, label: str, session=None):
+    if session:
+        session.update_last_sensor_ctx(window, start, end, rows, tag, label)
+    else:
+        LAST_SENSOR_CTX["window"] = window
+        LAST_SENSOR_CTX["start"] = start
+        LAST_SENSOR_CTX["end"] = end
+        LAST_SENSOR_CTX["rows"] = rows
+        LAST_SENSOR_CTX["tag"] = tag
+        LAST_SENSOR_CTX["label"] = label
+
+def _get_last_ctx(session=None):
+    if session:
+        return session.last_sensor_ctx
+    else:
+        return LAST_SENSOR_CTX
 
 def _format_full_rows(rows: List[dict], start: datetime, end: datetime, tag: str, label: str) -> str:
     lines = [f"[{label} 상세] {start.strftime('%Y-%m-%d %H:%M:%S')} ~ {end.strftime('%Y-%m-%d %H:%M:%S')} | 샘플 {len(rows)}개"]
@@ -1546,6 +1651,40 @@ def fetch_raw_exact_second_all(target_dt: datetime, max_files: int = MAX_FILES_T
                     return row, "D?"
     return None, None
 
+def show_hourly_average_if_requested(query: str) -> Optional[str]:
+    """시간별 평균이 요청되면 해당 시간의 houravg 데이터로 처리"""
+    if not hourly_average_requested(query):
+        return None
+    
+    # 날짜와 시간 추출
+    dt_strings = extract_datetime_strings(query)
+    target_dt = None
+    
+    for ds in dt_strings:
+        dt = parse_dt(ds)
+        if dt:
+            target_dt = dt
+            break
+    
+    if not target_dt:
+        # 현재 시간의 이전 시간 사용 (정시로 맞춤)
+        now = datetime.now()
+        target_dt = now.replace(minute=0, second=0, microsecond=0)
+        if now.minute < 30:  # 30분 이전이면 이전 시간 사용
+            target_dt = target_dt - timedelta(hours=1)
+    
+    # 해당 시간의 houravg 데이터 찾기
+    doc = find_houravg_doc_for_hour(target_dt)
+    
+    if not doc:
+        return f"{target_dt.strftime('%Y년 %m월 %d일 %H시')}의 시간별 평균 데이터를 찾을 수 없습니다."
+    
+    # 요청된 필드 추출
+    need_fields = detect_fields_in_query(query)
+    
+    # houravg 형식으로 포맷팅
+    return format_houravg_answer_from_doc(doc, need_fields)
+
 def show_daily_summary_if_requested(query: str) -> Optional[str]:
     """일간 요약이 요청되면 해당 날짜의 hourly 데이터로 일 평균과 추이 계산"""
     if not daily_summary_requested(query):
@@ -1577,31 +1716,36 @@ def show_daily_summary_if_requested(query: str) -> Optional[str]:
     # 일간 요약 포맷팅
     return format_daily_summary_from_houravg(docs, need_fields)
 
-def show_last_detail_if_any(query: str) -> Optional[str]:
+def show_last_detail_if_any(query: str, session=None) -> Optional[str]:
     if not want_detail_list(query):
         return None
-    if not LAST_SENSOR_CTX.get("start") or not LAST_SENSOR_CTX.get("end"):
+    
+    # 세션에서 컨텍스트 가져오기
+    ctx = _get_last_ctx(session)
+    
+    if not ctx.get("start") or not ctx.get("end"):
         return None
-    if not LAST_SENSOR_CTX.get("rows"):
-        rows, raw_tag = fetch_raw_rows_for_window_all(LAST_SENSOR_CTX["start"], LAST_SENSOR_CTX["end"])
+    if not ctx.get("rows"):
+        rows, raw_tag = fetch_raw_rows_for_window_all(ctx["start"], ctx["end"])
         if rows:
             _set_last_ctx(
-                window=LAST_SENSOR_CTX.get("window") or "range",
-                start=LAST_SENSOR_CTX["start"],
-                end=LAST_SENSOR_CTX["end"],
+                window=ctx.get("window") or "range",
+                start=ctx["start"],
+                end=ctx["end"],
                 rows=rows,
-                tag=raw_tag or LAST_SENSOR_CTX.get("tag") or "D?",
-                label=LAST_SENSOR_CTX.get("label") or "요청 구간",
+                tag=raw_tag or ctx.get("tag") or "D?",
+                label=ctx.get("label") or "요청 구간",
+                session=session
             )
         else:
             return "(최근 센서 구간의 원본 샘플을 찾지 못했어요. 시간/구간이 포함된 센서 질문을 먼저 해주세요.)"
 
     return _format_full_rows(
-        rows=LAST_SENSOR_CTX["rows"],
-        start=LAST_SENSOR_CTX["start"],
-        end=LAST_SENSOR_CTX["end"],
-        tag=LAST_SENSOR_CTX["tag"] or "D?",
-        label=LAST_SENSOR_CTX["label"] or "요청 구간"
+        rows=ctx["rows"],
+        start=ctx["start"],
+        end=ctx["end"],
+        tag=ctx["tag"] or "D?",
+        label=ctx["label"] or "요청 구간"
     )
 
 
@@ -1966,11 +2110,100 @@ def find_sensor_data_from_s3_logs(query: str) -> Optional[Dict]:
 CHATLOG_PREFIX = "chatlogs/"
 ENABLE_CHATLOG_SAVE = True
 MAX_HISTORY_TURNS = 50  # 전체 세션 기억하도록 증가
+
+# 세션 관리 클래스
+class UserSession:
+    def __init__(self, session_id: str = None):
+        if session_id:
+            self.session_id = session_id
+        else:
+            self.session_id = datetime.now(KST).strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:6]
+        self.turn_id = 0
+        self.history: List[Dict] = []
+        self.last_sensor_ctx: Dict[str, object] = {
+            "window": None,
+            "start": None, 
+            "end": None,
+            "rows": None,
+            "tag": None,
+            "label": None
+        }
+        self.followup_timestamp = None
+        self.created_at = datetime.now(KST)
+        self.last_activity = datetime.now(KST)
+    
+    def update_activity(self):
+        self.last_activity = datetime.now(KST)
+    
+    def increment_turn(self):
+        self.turn_id += 1
+        return self.turn_id
+    
+    def add_to_history(self, query: str, answer: str, route: str):
+        self.history.append({"query": query, "answer": answer, "route": route})
+        # 히스토리 길이 제한
+        if len(self.history) > MAX_HISTORY_TURNS:
+            self.history = self.history[-MAX_HISTORY_TURNS:]
+    
+    def clear_last_sensor_ctx(self):
+        self.last_sensor_ctx.update({
+            "window": None, 
+            "start": None, 
+            "end": None, 
+            "rows": None, 
+            "tag": None, 
+            "label": None
+        })
+    
+    def update_last_sensor_ctx(self, window, start, end, rows, tag, label):
+        self.last_sensor_ctx["window"] = window
+        self.last_sensor_ctx["start"] = start
+        self.last_sensor_ctx["end"] = end
+        self.last_sensor_ctx["rows"] = rows
+        self.last_sensor_ctx["tag"] = tag
+        self.last_sensor_ctx["label"] = label
+
+# 전역 세션 저장소
+USER_SESSIONS: Dict[str, UserSession] = {}
+SESSION_TIMEOUT = 3600  # 1시간 후 세션 만료
+
+def get_or_create_session(session_id: str = None):
+    """세션을 가져오거나 새로 생성"""
+    if session_id and session_id in USER_SESSIONS:
+        session = USER_SESSIONS[session_id]
+        session.update_activity()
+        return session
+    
+    # 새 세션 생성 (사용자 제공 ID 사용 또는 자동 생성)
+    new_session = UserSession(session_id)
+    USER_SESSIONS[new_session.session_id] = new_session
+    
+    # 만료된 세션 정리
+    cleanup_expired_sessions()
+    
+    return new_session
+
+def cleanup_expired_sessions():
+    """만료된 세션들을 정리"""
+    now = datetime.now(KST)
+    expired_sessions = []
+    
+    for session_id, session in USER_SESSIONS.items():
+        if (now - session.last_activity).total_seconds() > SESSION_TIMEOUT:
+            expired_sessions.append(session_id)
+    
+    for session_id in expired_sessions:
+        del USER_SESSIONS[session_id]
+    
+    if expired_sessions:
+        print(f"정리된 만료 세션: {len(expired_sessions)}개")
+
+# 하위 호환성을 위한 전역 변수들 (기본 세션용) 
 SESSION_ID = datetime.now(KST).strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:6]
 TURN_ID = 0
 HISTORY: List[Dict] = []
 
-_FOLLOWUP_HINTS = ("같은", "그때", "그 때", "방금", "이전", "앞의", "동일", "위의", "아까", "해당", "최근", "습도", "공기질", "이산화탄소", "CO2", "gas")
+_FOLLOWUP_HINTS = ("같은", "그때", "그 때", "방금", "바로", "이전", "앞의", "동일", "위의", "아까", "해당", "최근", "직전", "금방", "습도", "공기질", "이산화탄소", "CO2", "gas")
 
 def reset_session():
     """세션 종료 시 히스토리와 컨텍스트 초기화"""
@@ -1985,21 +2218,30 @@ def reset_session():
 # 후속질문용 기준 타임스탬프 저장
 _FOLLOWUP_TIMESTAMP = None
 
-def set_followup_timestamp(dt: datetime):
+def set_followup_timestamp(dt: datetime, session=None):
     """후속질문용 기준 타임스탬프 설정"""
-    global _FOLLOWUP_TIMESTAMP
-    _FOLLOWUP_TIMESTAMP = dt
+    if session:
+        session.followup_timestamp = dt
+    else:
+        global _FOLLOWUP_TIMESTAMP
+        _FOLLOWUP_TIMESTAMP = dt
 
-def get_followup_timestamp() -> Optional[datetime]:
+def get_followup_timestamp(session=None) -> Optional[datetime]:
     """후속질문용 기준 타임스탬프 반환"""
-    return _FOLLOWUP_TIMESTAMP
+    if session:
+        return session.followup_timestamp
+    else:
+        return _FOLLOWUP_TIMESTAMP
 
-def clear_followup_timestamp():
+def clear_followup_timestamp(session=None):
     """후속질문용 기준 타임스탬프 초기화"""
-    global _FOLLOWUP_TIMESTAMP
-    _FOLLOWUP_TIMESTAMP = None
+    if session:
+        session.followup_timestamp = None
+    else:
+        global _FOLLOWUP_TIMESTAMP
+        _FOLLOWUP_TIMESTAMP = None
 
-def expand_followup_query_with_last_window(query: str) -> str:
+def expand_followup_query_with_last_window(query: str, session=None) -> str:
     """후속 질문에 이전 질문의 정확한 시간 정보 추가"""
     # 현재 질문에 이미 시간 정보가 있으면 후속질문이 아님
     current_dt_strings = extract_datetime_strings(query)
@@ -2029,15 +2271,16 @@ def expand_followup_query_with_last_window(query: str) -> str:
     if not (has_followup_hint or is_sensor_query):
         return query
     
-    # 저장된 기준 타임스탬프 사용
-    followup_timestamp = get_followup_timestamp()
+    # 저장된 기준 타임스탬프 사용 (세션별)
+    followup_timestamp = get_followup_timestamp(session)
     if followup_timestamp:
         expanded = f"{followup_timestamp.strftime('%Y년 %m월 %d일 %H시 %M분')} {query}"
         # clear_followup_timestamp()  # 초기화 제거 - 연속 후속질문 허용
         return expanded
     
-    # 이전 방식 fallback
-    s, e = LAST_SENSOR_CTX.get("start"), LAST_SENSOR_CTX.get("end")
+    # 이전 방식 fallback (세션별)
+    ctx = _get_last_ctx(session)
+    s, e = ctx.get("start"), ctx.get("end")
     if not (s and e):
         return query
     return f"{query} (기준 구간: {s.strftime('%Y-%m-%d %H:%M:%S')}~{e.strftime('%Y-%m-%d %H:%M:%S')})"
@@ -2132,10 +2375,13 @@ def build_prompt(query: str, context: str, history: List[Dict] = None) -> str:
         "16. 몇 시간 전에 데이터를 물어볼 때, 같은 시간, 같은 분이면 같은 데이터야. (예시: 5시 1분의 3시간 전은 2시 1분인데, 2시 1분 데이터가 있으니 같은거)\n"
         "17. 이전, 방금, 금방의 내용이나 대화 기록을 물을 때는 위의 [이전 대화] 섹션을 참조해서 정확하게 대답해\n"
         "18. [이전 대화]를 참조하는데, 물어본 질문에만 대답해\n"
-        "19. '현재 시간'이나 '지금'을 말할 때는 반드시 위의 **현재 시간**을 사용해. 이전 대화의 시간과 혼동하지 마\n"
-        "20. 센서 데이터 시간과 현재 시간을 명확히 구분해서 답변해\n"
-        "21. 몇 월인지 말하지 않을 때, 몇 월인지 물어보고, 현재 있는 데이터에 기반해서 말해\n"
-        "22. 컨텍스트에 없는 내용은 추측하지 마\n\n"
+        "18-1. **복수 시간을 물어본 후 '방금 물어본 시간'이라고 하면**: 가장 마지막(최근) 시간을 의미함 (예: '1시와 2시' → '2시'를 의미)\n"
+        "19. **여러 시간대를 동시에 요청할 때**: '1시와 2시 온도', '오후 1시와 오후 2시' 등처럼 복수의 시간을 묻는 경우, 각각의 시간대별로 구분해서 명확히 답변해. 각 시간대마다 **별도의 소제목**을 만들어 정리해\n"
+        "20. 복수 시간 요청 시 형식: **시간1 결과:** (데이터 또는 '데이터 없음'), **시간2 결과:** (데이터 또는 '데이터 없음')\n"
+        "21. '현재 시간'이나 '지금'을 말할 때는 반드시 위의 **현재 시간**을 사용해. 이전 대화의 시간과 혼동하지 마\n"
+        "22. 센서 데이터 시간과 현재 시간을 명확히 구분해서 답변해\n"
+        "23. 몇 월인지 말하지 않을 때, 몇 월인지 물어보고, 현재 있는 데이터에 기반해서 말해\n"
+        "24. 컨텍스트에 없는 내용은 추측하지 마\n\n"
         
         f"{hist_block}"
         f"**센서 데이터:**\n{context if context else '데이터를 찾을 수 없습니다.'}\n\n"
@@ -2182,7 +2428,24 @@ def generate_answer_with_nova(prompt: str) -> str:
     return json.dumps(payload, ensure_ascii=False)[:2000]
 
 # ===== Chat Loop =====
+def chat_with_session(session_id: str = None):
+    """세션 기반 채팅 함수"""
+    session = get_or_create_session(session_id)
+    
+    print("RAG Chatbot (S3 + Bedrock Claude Sonnet 4) - 다중 사용자 지원")
+    print(f"[세션] SESSION_ID = {session.session_id}")
+    print(f"[세션] 활성 세션 수: {len(USER_SESSIONS)}")
+    print("- 정확 매칭 모드: 시/분/초는 정확히 일치할 때만 응답")
+    print("- RAW·MINAVG·HOURAVG 자동 인식 / 초·분·시간·일 / 구간·지속시간 / 추이 / 처음·마지막 / 원본")
+    print("- '상세/자세히/상세히/원본/목록'으로 직전 창 RAW 전체 출력 + 새 센서 질문 시 컨텍스트 초기화")
+    print(f"설정: 병렬 워커 {MAX_WORKERS}개, 최대 파일 크기 {MAX_FILE_SIZE//1024}KB, 관련도 임계치 {RELEVANCE_THRESHOLD}")
+    print(f"히스토리: 최대 {MAX_HISTORY_TURNS}턴 기억, 세션별 독립 관리")
+    print("질문을 입력하세요. 종료하려면 'exit'/'quit'/'q' 입력.\n")
+
+    return chat_loop(session)
+
 def chat():
+    """기존 호환성을 위한 단일 세션 채팅 함수"""
     print("RAG Chatbot (S3 + Bedrock Claude Sonnet 4)")
     print(f"[세션] SESSION_ID = {SESSION_ID}")
     print("- 정확 매칭 모드: 시/분/초는 정확히 일치할 때만 응답")
@@ -2193,68 +2456,122 @@ def chat():
     print("질문을 입력하세요. 종료하려면 'exit'/'quit'/'q' 입력.\n")
 
     global TURN_ID, HISTORY
+    return chat_loop(session=None)
+
+def chat_loop(session=None):
+    """세션 기반 채팅 루프"""
+    # 세션이 없으면 전역 변수 사용 (하위 호환성)
+    use_global = (session is None)
+    
+    if use_global:
+        global TURN_ID, HISTORY
 
     while True:
         try:
             query_raw = input("> ").strip()
         except (EOFError, KeyboardInterrupt):
             print("\nBye!")
-            reset_session()
+            if session:
+                session.clear_last_sensor_ctx()
+                clear_followup_timestamp(session)
+            else:
+                reset_session()
             break
 
         if query_raw.lower() in {"exit", "quit", "q"}:
             print("Bye!")
-            reset_session()
+            if session:
+                session.clear_last_sensor_ctx()
+                clear_followup_timestamp(session)
+            else:
+                reset_session()
             break
         if not query_raw:
             continue
+
+        # 세션 활동 업데이트
+        if session:
+            session.update_activity()
 
         try:
             t0 = time.time()
 
             # 0) 상세 재요청이면 직전 센서 컨텍스트 출력
-            detail_ans = show_last_detail_if_any(query_raw)
+            detail_ans = show_last_detail_if_any(query_raw, session)
             if detail_ans:
                 print(f"\n{detail_ans}")
                 if ENABLE_CHATLOG_SAVE:
-                    TURN_ID += 1
-                    HISTORY.append({"query": query_raw, "answer": detail_ans, "route": "sensor"})
-                    save_turn_to_s3(SESSION_ID, TURN_ID, "sensor", query_raw, detail_ans, top_docs=[])
+                    if session:
+                        turn_id = session.increment_turn()
+                        session.add_to_history(query_raw, detail_ans, "sensor")
+                        save_turn_to_s3(session.session_id, turn_id, "sensor", query_raw, detail_ans, top_docs=[])
+                    else:
+                        TURN_ID += 1
+                        HISTORY.append({"query": query_raw, "answer": detail_ans, "route": "sensor"})
+                        save_turn_to_s3(SESSION_ID, TURN_ID, "sensor", query_raw, detail_ans, top_docs=[])
                 continue
 
-            # 0-1) 일간 요약 요청이면 houravg 데이터로 처리
+            # 0-1) 시간별 평균 요청이면 houravg 데이터로 처리
+            hourly_ans = show_hourly_average_if_requested(query_raw)
+            if hourly_ans:
+                print(f"\n{hourly_ans}")
+                if ENABLE_CHATLOG_SAVE:
+                    if session:
+                        turn_id = session.increment_turn()
+                        session.add_to_history(query_raw, hourly_ans, "sensor")
+                        save_turn_to_s3(session.session_id, turn_id, "sensor", query_raw, hourly_ans, top_docs=[])
+                    else:
+                        TURN_ID += 1
+                        HISTORY.append({"query": query_raw, "answer": hourly_ans, "route": "sensor"})
+                        save_turn_to_s3(SESSION_ID, TURN_ID, "sensor", query_raw, hourly_ans, top_docs=[])
+                continue
+
+            # 0-2) 일간 요약 요청이면 houravg 데이터로 처리
             daily_ans = show_daily_summary_if_requested(query_raw)
             if daily_ans:
                 print(f"\n{daily_ans}")
                 if ENABLE_CHATLOG_SAVE:
-                    TURN_ID += 1
-                    HISTORY.append({"query": query_raw, "answer": daily_ans, "route": "sensor"})
-                    save_turn_to_s3(SESSION_ID, TURN_ID, "sensor", query_raw, daily_ans, top_docs=[])
+                    if session:
+                        turn_id = session.increment_turn()
+                        session.add_to_history(query_raw, daily_ans, "sensor")
+                        save_turn_to_s3(session.session_id, turn_id, "sensor", query_raw, daily_ans, top_docs=[])
+                    else:
+                        TURN_ID += 1
+                        HISTORY.append({"query": query_raw, "answer": daily_ans, "route": "sensor"})
+                        save_turn_to_s3(SESSION_ID, TURN_ID, "sensor", query_raw, daily_ans, top_docs=[])
                 continue
 
-            # 0-1) 후속질문이라면 직전 센서 구간을 자동 주입
-            query = expand_followup_query_with_last_window(query_raw)
+            # 0-3) 후속질문이라면 직전 센서 구간을 자동 주입
+            query = expand_followup_query_with_last_window(query_raw, session)
 
             # 1) 라우팅
             route = decide_route(query)
 
             if route == "general":
-                prompt = build_general_prompt(query, history=HISTORY)
+                # 세션별 히스토리 사용
+                current_history = session.history if session else HISTORY
+                prompt = build_general_prompt(query, history=current_history)
                 t_gen0 = time.time()
                 ans = generate_answer_with_nova(prompt)
                 t_gen = time.time() - t_gen0
 
                 print(f"\n{ans}")
 
-                # 히스토리 및 저장
-                TURN_ID += 1
-                HISTORY.append({"query": query_raw, "answer": ans, "route": "general"})
-                if ENABLE_CHATLOG_SAVE:
-                    save_turn_to_s3(SESSION_ID, TURN_ID, "general", query_raw, ans, top_docs=[])
+                # 히스토리 및 저장 (세션별)
+                if session:
+                    turn_id = session.increment_turn()
+                    session.add_to_history(query_raw, ans, "general")
+                    if ENABLE_CHATLOG_SAVE:
+                        save_turn_to_s3(session.session_id, turn_id, "general", query_raw, ans, top_docs=[])
+                else:
+                    TURN_ID += 1
+                    HISTORY.append({"query": query_raw, "answer": ans, "route": "general"})
+                    if ENABLE_CHATLOG_SAVE:
+                        save_turn_to_s3(SESSION_ID, TURN_ID, "general", query_raw, ans, top_docs=[])
                 continue
 
-            # 새로운 센서 질문 → 이전 센서 컨텍스트 초기화
-            _reset_last_ctx()
+            # 새로운 센서 질문 → 이전 센서 컨텍스트 초기화 (세션별)
+            _reset_last_ctx(session)
 
             # 2) 먼저 S3 로그에서 해당 시간의 센서 데이터 찾기 시도
             cached_sensor_data = find_sensor_data_from_s3_logs(query)
@@ -2262,11 +2579,11 @@ def chat():
             if cached_sensor_data:
                 # S3 로그에서 데이터를 찾은 경우
                 
-                # 캐시된 데이터에서도 타임스탬프를 후속질문용으로 저장 (최근 데이터 검색이 실패했을 때만)
-                current_timestamp = get_followup_timestamp()
+                # 캐시된 데이터에서도 타임스탬프를 후속질문용으로 저장 (세션별)
+                current_timestamp = get_followup_timestamp(session)
                 if not current_timestamp:
                     cached_dt = datetime.strptime(cached_sensor_data['timestamp'], '%Y-%m-%d %H:%M:%S')
-                    set_followup_timestamp(cached_dt)
+                    set_followup_timestamp(cached_dt, session)
                 
                 # 요청된 필드만 추출해서 응답 생성
                 need_fields = detect_fields_in_query(query)
@@ -2284,10 +2601,17 @@ def chat():
                     quick_answer = f"{timestamp_str}: {', '.join(response_parts)}"
                     print(f"\n{quick_answer}")
                     
-                    TURN_ID += 1
-                    HISTORY.append({"query": query_raw, "answer": quick_answer, "route": "sensor_cache"})
-                    if ENABLE_CHATLOG_SAVE:
-                        save_turn_to_s3(SESSION_ID, TURN_ID, "sensor_cache", query_raw, quick_answer, top_docs=[])
+                    # 히스토리 및 저장 (세션별)
+                    if session:
+                        turn_id = session.increment_turn()
+                        session.add_to_history(query_raw, quick_answer, "sensor_cache")
+                        if ENABLE_CHATLOG_SAVE:
+                            save_turn_to_s3(session.session_id, turn_id, "sensor_cache", query_raw, quick_answer, top_docs=[])
+                    else:
+                        TURN_ID += 1
+                        HISTORY.append({"query": query_raw, "answer": quick_answer, "route": "sensor_cache"})
+                        if ENABLE_CHATLOG_SAVE:
+                            save_turn_to_s3(SESSION_ID, TURN_ID, "sensor_cache", query_raw, quick_answer, top_docs=[])
                     continue
 
             # 3) S3 로그에 없으면 기존 방식으로 센서 확정 → S3 검색
@@ -2307,36 +2631,169 @@ def chat():
                                                for d in top_docs)
             use_rag = has_sensor_data and (top_docs[0]["score"] >= RELEVANCE_THRESHOLD)
             
+            # 최신 데이터 요청 여부 미리 확인
+            is_recent_request = is_recent_query(query)
+            should_extract_from_response = False
+            
+            print(f"DEBUG: use_rag={use_rag}, is_recent_request={is_recent_request}")  # 디버깅용
+            
             if use_rag:
-                prompt = build_prompt(query, context, history=HISTORY)
+                # 세션별 히스토리 사용
+                current_history = session.history if session else HISTORY
+                prompt = build_prompt(query, context, history=current_history)
                 
-                # RAG 센서 질문에서 타임스탬프 추출해서 후속질문용으로 저장 (이미 설정되지 않았을 때만)
-                current_timestamp = get_followup_timestamp()
-                if not current_timestamp:
+                # RAG 센서 질문에서 타임스탬프 추출해서 후속질문용으로 저장 (세션별)
+                current_timestamp = get_followup_timestamp(session)
+                print(f"DEBUG: current_timestamp = {current_timestamp}")  # 디버깅용
+                
+                # 최신 요청의 경우 항상 새 타임스탬프로 업데이트
+                if is_recent_request:
+                    should_extract_from_response = True
+                    print("DEBUG: Will extract timestamp from RAG response (recent request)")  # 디버깅용
+                elif not current_timestamp:
                     dt_strings = extract_datetime_strings(query)
+                    print(f"DEBUG: dt_strings = {dt_strings}")  # 디버깅용
+                    
+                    # 복수 시간대의 경우 마지막(최신) 시간을 사용
+                    parsed_dts = []
                     for ds in dt_strings:
                         dt = parse_dt(ds)
                         if dt:
-                            set_followup_timestamp(dt)
-                            break
+                            parsed_dts.append(dt)
+                    
+                    if parsed_dts:
+                        # 가장 마지막(최신) 시간을 followup_timestamp로 설정
+                        latest_dt = max(parsed_dts)  # 시간상 가장 늦은 것
+                        print(f"DEBUG: Setting timestamp from query (latest of {len(parsed_dts)}): {latest_dt}")  # 디버깅용
+                        set_followup_timestamp(latest_dt, session)
+                    
+                    # 추가: 복수 시간 요청인 경우 응답에서도 시간 추출 시도
+                    if "와" in query or "하고" in query or "그리고" in query:
+                        should_extract_from_response = True
+                        print("DEBUG: Multiple time request detected, will also extract from response")  # 디버깅용
+                else:
+                    print("DEBUG: Already has current_timestamp, not extracting")  # 디버깅용
             else:
-                prompt = build_general_prompt(query, history=HISTORY)
+                # 세션별 히스토리 사용
+                current_history = session.history if session else HISTORY
+                prompt = build_general_prompt(query, history=current_history)
+                
+                # RAG가 아닌 경우에도 최신 요청이면 타임스탬프 추출 시도
+                if is_recent_request:
+                    should_extract_from_response = True
+                    print("DEBUG: Will extract timestamp from non-RAG response")  # 디버깅용
                 
             t_gen0 = time.time()
             ans = generate_answer_with_nova(prompt)
             t_gen = time.time() - t_gen0
             print(f"\n{ans}")
 
-            TURN_ID += 1
-            HISTORY.append({"query": query_raw, "answer": ans, "route": "sensor" if use_rag else "general"})
-            if ENABLE_CHATLOG_SAVE:
-                save_turn_to_s3(SESSION_ID, TURN_ID, "sensor" if use_rag else "general", query_raw, ans, top_docs=top_docs)
+            # 최신 데이터 요청의 경우 응답에서 타임스탬프 추출
+            print(f"DEBUG: should_extract_from_response = {should_extract_from_response}")  # 디버깅용
+            if should_extract_from_response:
+                import re
+                print(f"DEBUG: Extracting timestamp from response: {ans[:200]}")  # 디버깅용
+                
+                # 응답에서 날짜와 시간 패턴 찾기 (예: "8월 14일 16시 46분", "2025-08-14 16:46", "오후 3시")
+                timestamp_patterns = [
+                    r'(\d+)월\s*(\d+)일\s*(\d+)시\s*(\d+)분',
+                    r'(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{1,2})',
+                    r'(\d+)월\s*(\d+)일\s*(\d+)시',
+                    r'(\d+)월\s*(\d+)일\s*(오전|오후)\s*(\d+)시',  # 8월 13일 오후 3시
+                    r'(오전|오후)\s*(\d+)시'  # 오후 3시 (단독)
+                ]
+                
+                extracted_successfully = False
+                all_extracted_times = []  # 모든 추출된 시간을 저장
+                
+                for pattern in timestamp_patterns:
+                    matches = re.findall(pattern, ans)
+                    print(f"DEBUG: Pattern '{pattern}' matches: {matches}")  # 디버깅용
+                    for match in matches:  # 모든 매치를 처리
+                        try:
+                            if len(match) == 4 and all(m.isdigit() for m in match):  # 월일시분
+                                month, day, hour, minute = map(int, match)
+                                year = datetime.now().year
+                                extracted_dt = datetime(year, month, day, hour, minute)
+                            elif len(match) == 5 and all(m.isdigit() for m in match):  # 년월일시분
+                                year, month, day, hour, minute = map(int, match)
+                                extracted_dt = datetime(year, month, day, hour, minute)
+                            elif len(match) == 3 and all(m.isdigit() for m in match):  # 월일시
+                                month, day, hour = map(int, match)
+                                year = datetime.now().year
+                                extracted_dt = datetime(year, month, day, hour, 0)
+                            elif len(match) == 4 and match[2] in ['오전', '오후']:  # 월일 오전/오후 시
+                                month, day, ampm, hour = match
+                                month, day, hour = int(month), int(day), int(hour)
+                                year = datetime.now().year
+                                # 오전/오후 처리
+                                if ampm == "오후" and hour != 12:
+                                    hour += 12
+                                elif ampm == "오전" and hour == 12:
+                                    hour = 0
+                                extracted_dt = datetime(year, month, day, hour, 0)
+                            elif len(match) == 2 and match[0] in ['오전', '오후']:  # 오전/오후 시
+                                ampm, hour = match
+                                hour = int(hour)
+                                # 현재 기준 날짜 사용
+                                year, month, day = datetime.now().year, datetime.now().month, datetime.now().day
+                                # 오전/오후 처리
+                                if ampm == "오후" and hour != 12:
+                                    hour += 12
+                                elif ampm == "오전" and hour == 12:
+                                    hour = 0
+                                extracted_dt = datetime(year, month, day, hour, 0)
+                            else:
+                                continue
+                            
+                            all_extracted_times.append(extracted_dt)
+                            print(f"DEBUG: Extracted time from response: {extracted_dt}")  # 디버깅용
+                            
+                        except Exception as e:
+                            print(f"DEBUG: Failed to parse match {match}: {e}")  # 디버깅용
+                            continue
+                
+                # 모든 추출된 시간 중 가장 최신 시간을 선택
+                if all_extracted_times:
+                    latest_time = max(all_extracted_times)
+                    print(f"DEBUG: Setting followup timestamp to latest of {len(all_extracted_times)} times: {latest_time}")  # 디버깅용
+                    set_followup_timestamp(latest_time, session)
+                    extracted_successfully = True
+                else:
+                    print("DEBUG: No timestamp extracted from response")  # 디버깅용
+
+            # 히스토리 및 저장 (세션별)
+            if session:
+                turn_id = session.increment_turn()
+                session.add_to_history(query_raw, ans, "sensor" if use_rag else "general")
+                if ENABLE_CHATLOG_SAVE:
+                    save_turn_to_s3(session.session_id, turn_id, "sensor" if use_rag else "general", query_raw, ans, top_docs=top_docs)
+            else:
+                TURN_ID += 1
+                HISTORY.append({"query": query_raw, "answer": ans, "route": "sensor" if use_rag else "general"})
+                if ENABLE_CHATLOG_SAVE:
+                    save_turn_to_s3(SESSION_ID, TURN_ID, "sensor" if use_rag else "general", query_raw, ans, top_docs=top_docs)
 
         except Exception:
             pass
             traceback.print_exc()
 
 def main():
+    """메인 함수 - 다중 사용자 지원 채팅"""
+    import sys
+    
+    if len(sys.argv) > 1:
+        # 세션 ID를 명령행 인수로 받을 수 있음
+        session_id = sys.argv[1]
+        print(f"세션 ID로 채팅 시작: {session_id}")
+        chat_with_session(session_id)
+    else:
+        # 기본 동작: 새 세션으로 다중 사용자 지원 채팅
+        print("다중 사용자 지원 채팅을 시작합니다...")
+        chat_with_session()
+
+def main_legacy():
+    """기존 방식의 단일 세션 채팅 (하위 호환성)"""
     chat()
 
 if __name__ == "__main__":
