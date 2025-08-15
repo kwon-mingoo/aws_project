@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for:*)",
+      "Bash(do)",
+      "Bash(echo:*)",
+      "Bash(head:*)",
+      "Bash(done)",
+      "Bash(git config:*)",
+      "Bash(rm:*)",
+      "Bash(chmod:*)",
+      "Bash(ssh:*)",
+      "Bash(find:*)",
+      "Bash(bash:*)",
+      "Bash(npm install)",
+      "Bash(git add:*)",
+      "Bash(mkdir:*)",
+      "Bash(pip3 install:*)"
+    ],
+    "deny": [],
+    "ask": [],
+    "defaultMode": "acceptEdits"
+  }
+}

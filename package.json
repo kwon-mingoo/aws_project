@@ -1,0 +1,62 @@
+{
+  "name": "aws2-giot-app",
+  "version": "1.0.0",
+  "description": "AWS2-GIOT Full-Stack Application with NestJS Backend, React Frontend, and Python Chatbot",
+  "main": "ecosystem.config.js",
+  "scripts": {
+    "start": "pm2 start ecosystem.config.js --env production",
+    "stop": "pm2 stop ecosystem.config.js",
+    "restart": "pm2 restart ecosystem.config.js",
+    "reload": "pm2 reload ecosystem.config.js",
+    "delete": "pm2 delete ecosystem.config.js",
+    "logs": "pm2 logs aws2-giot-backend",
+    "monit": "pm2 monit",
+    "status": "pm2 list",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "dev:backend": "cd aws2-api && npm run start:dev",
+    "dev:frontend": "cd frontend_backup && npm start",
+    "backend": "cd aws2-api && npm run start:dev",
+    "frontend": "cd frontend_backup && npm start",
+    "build:backend": "cd aws2-api && npm run build",
+    "build:frontend": "cd frontend_backup && npm run build",
+    "build:all": "npm run build:backend && npm run build:frontend",
+    "install:all": "npm install && cd aws2-api && npm install && cd ../frontend_backup && npm install && cd ..",
+    "test:backend": "cd aws2-api && npm test",
+    "test:frontend": "cd frontend_backup && npm test",
+    "test": "npm run test:backend && npm run test:frontend",
+    "lint:backend": "cd aws2-api && npm run lint",
+    "lint:frontend": "cd frontend_backup && npm run lint",
+    "deploy:local": "pm2 start ecosystem.config.js --env production",
+    "health-check": "curl -f http://localhost:3001/health && curl -f http://localhost/"
+  },
+  "keywords": [
+    "aws",
+    "ec2",
+    "codedeploy",
+    "nestjs",
+    "react",
+    "python",
+    "chatbot",
+    "fullstack"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "concurrently": "^9.2.0"
+  },
+  "devDependencies": {
+    "pm2": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/aws2-giot-app.git"
+  },
+  "homepage": "https://github.com/your-username/aws2-giot-app#readme",
+  "bugs": {
+    "url": "https://github.com/your-username/aws2-giot-app/issues"
+  }
+}

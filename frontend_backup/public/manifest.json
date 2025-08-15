@@ -1,0 +1,20 @@
+{
+  "short_name": "IoT Dashboard",
+  "name": "IoT 센서 데이터 대시보드",
+  "icons": [
+    {
+      "src": "images/logo1.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "images/logo1.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1976d2",
+  "background_color": "#ffffff"
+}

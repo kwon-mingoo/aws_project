@@ -1,0 +1,535 @@
+/* Transition.css - 중간 로딩 화면 스타일 */
+
+/* 기본 레이아웃 */
+.transitionContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9997;
+  overflow: hidden;
+}
+
+.transitionContainer.fadeOut {
+  opacity: 0;
+  transition: opacity 0.8s ease-out;
+}
+
+/* 배경 기하학적 패턴 - 중간 로딩용 */
+.transitionGeometricBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.transitionGeometricShape {
+  position: absolute;
+  border: 2px solid;
+  border-radius: 4px;
+  opacity: 0.06;
+}
+
+/* 육각형들 - 중간 로딩용 배치 */
+.transitionHexagon1 {
+  width: 250px;
+  height: 250px;
+  border-color: #fb923c;
+  top: 15%;
+  left: 15%;
+  transform: rotate(25deg);
+  animation: transitionFloat 10s ease-in-out infinite;
+}
+
+.transitionHexagon2 {
+  width: 350px;
+  height: 350px;
+  border-color: #cbd5e1;
+  top: 10%;
+  right: 10%;
+  transform: rotate(-20deg);
+  animation: transitionFloat 14s ease-in-out infinite reverse;
+}
+
+.transitionHexagon3 {
+  width: 180px;
+  height: 180px;
+  border-color: #fb923c;
+  bottom: 25%;
+  left: 25%;
+  transform: rotate(40deg);
+  animation: transitionFloat 12s ease-in-out infinite;
+}
+
+.transitionHexagon4 {
+  width: 300px;
+  height: 300px;
+  border-color: #cbd5e1;
+  bottom: 20%;
+  right: 20%;
+  transform: rotate(-35deg);
+  animation: transitionFloat 16s ease-in-out infinite reverse;
+}
+
+/* 다이아몬드 패턴 */
+.transitionDiamond1 {
+  width: 200px;
+  height: 200px;
+  border-color: #e2e8f0;
+  top: 50%;
+  left: 10%;
+  transform: translateY(-50%) rotate(45deg);
+  animation: transitionRotate 18s linear infinite;
+}
+
+.transitionDiamond2 {
+  width: 150px;
+  height: 150px;
+  border-color: #e2e8f0;
+  top: 50%;
+  right: 10%;
+  transform: translateY(-50%) rotate(-45deg);
+  animation: transitionRotate 22s linear infinite reverse;
+}
+
+/* 선형 패턴들 */
+.transitionLinePattern1 {
+  width: 500px;
+  height: 3px;
+  border: none;
+  background: linear-gradient(90deg, transparent 0%, #fb923c 50%, transparent 100%);
+  top: 35%;
+  left: 5%;
+  transform: rotate(8deg);
+  animation: transitionShimmer 6s ease-in-out infinite;
+}
+
+.transitionLinePattern2 {
+  width: 450px;
+  height: 3px;
+  border: none;
+  background: linear-gradient(90deg, transparent 0%, #cbd5e1 50%, transparent 100%);
+  bottom: 35%;
+  right: 5%;
+  transform: rotate(-12deg);
+  animation: transitionShimmer 8s ease-in-out infinite reverse;
+}
+
+/* 메인 로고 영역 */
+.transitionLogoContainer {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  animation: transitionSlideIn 1s ease-out;
+}
+
+.transitionLogoText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.transitionLogoMain {
+  font-size: 4.5rem;
+  font-weight: 900;
+  color: #1e293b;
+  letter-spacing: -0.05em;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.transitionLogoAccent {
+  font-size: 4.5rem;
+  font-weight: 900;
+  color: #fb923c;
+  letter-spacing: -0.05em;
+  text-shadow: 0 3px 6px rgba(251, 146, 60, 0.3);
+}
+
+.transitionLogoSubtext {
+  font-size: 1.375rem;
+  color: #fb923c;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-bottom: 36px;
+  opacity: 0.9;
+}
+
+/* 중간 로딩 화살표 - 점점 선명해지는 애니메이션 */
+.transitionArrowContainer {
+  position: relative;
+  width: 360px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 24px 0;
+}
+
+.transitionArrow {
+  position: relative;
+  width: 300px;
+  height: 6px;
+  background: linear-gradient(90deg, #fb923c 0%, #ea580c 100%);
+  border-radius: 3px;
+  transition: all 0.3s ease-out;
+  box-shadow: 0 3px 12px rgba(251, 146, 60, 0.3);
+}
+
+.transitionArrowHead {
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 14px solid transparent;
+  border-bottom: 14px solid transparent;
+  border-left: 20px solid #ea580c;
+  transition: all 0.3s ease-out;
+  filter: drop-shadow(0 3px 6px rgba(251, 146, 60, 0.3));
+}
+
+/* 진행 단계별 화살표 스타일 */
+.transitionArrowStage1 {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+.transitionArrowStage2 {
+  opacity: 0.6;
+  transform: scale(0.98);
+}
+
+.transitionArrowStage3 {
+  opacity: 0.8;
+  transform: scale(1.01);
+}
+
+.transitionArrowStage4 {
+  opacity: 1;
+  transform: scale(1.05);
+  box-shadow: 
+    0 4px 16px rgba(251, 146, 60, 0.4),
+    0 2px 8px rgba(251, 146, 60, 0.2);
+}
+
+/* 상태 텍스트 */
+.transitionStatusText {
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-top: 32px;
+  text-align: center;
+  animation: transitionPulse 2s ease-in-out infinite;
+}
+
+/* 진행 상태 표시 */
+.transitionProgress {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.transitionDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #cbd5e1;
+  transition: all 0.3s ease;
+}
+
+.transitionDotActive {
+  background-color: #fb923c;
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(251, 146, 60, 0.5);
+}
+
+/* 에러 상태 */
+.transitionErrorContainer {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 36px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: transitionSlideIn 0.8s ease-out;
+}
+
+.transitionErrorTitle {
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: #dc2626;
+  margin-bottom: 12px;
+}
+
+.transitionErrorMessage {
+  font-size: 1rem;
+  color: #64748b;
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.transitionRetryButton {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(251, 146, 60, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.transitionRetryButton:hover {
+  background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(251, 146, 60, 0.5);
+}
+
+.transitionRetryButton:active {
+  transform: translateY(0);
+}
+
+/* 하단 카피라이트 */
+.transitionCopyright {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 10;
+  letter-spacing: 0.05em;
+}
+
+/* 애니메이션 키프레임 */
+@keyframes transitionFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(var(--rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-25px) rotate(var(--rotate, 0deg));
+  }
+}
+
+@keyframes transitionRotate {
+  from {
+    transform: translateY(-50%) rotate(45deg);
+  }
+  to {
+    transform: translateY(-50%) rotate(405deg);
+  }
+}
+
+@keyframes transitionShimmer {
+  0%, 100% {
+    opacity: 0.06;
+    transform: translateX(-40px) rotate(var(--rotate, 0deg));
+  }
+  50% {
+    opacity: 0.12;
+    transform: translateX(40px) rotate(var(--rotate, 0deg));
+  }
+}
+
+@keyframes transitionSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes transitionPulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 화살표 강조 애니메이션 */
+@keyframes transitionArrowGlow {
+  0%, 100% {
+    box-shadow: 
+      0 3px 12px rgba(251, 146, 60, 0.3),
+      0 1px 4px rgba(251, 146, 60, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 5px 20px rgba(251, 146, 60, 0.5),
+      0 3px 8px rgba(251, 146, 60, 0.3);
+  }
+}
+
+.transitionArrowStage4 {
+  animation: transitionArrowGlow 2s ease-in-out infinite;
+}
+
+/* 페이드 아웃 트랜지션 */
+@keyframes transitionFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+.transitionContainer.transitioning {
+  animation: transitionFadeOut 0.8s ease-out forwards;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .transitionLogoMain, .transitionLogoAccent {
+    font-size: 3.5rem;
+  }
+  
+  .transitionLogoSubtext {
+    font-size: 1.25rem;
+  }
+  
+  .transitionArrowContainer {
+    width: 320px;
+  }
+  
+  .transitionArrow {
+    width: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .transitionLogoMain, .transitionLogoAccent {
+    font-size: 3rem;
+  }
+  
+  .transitionLogoSubtext {
+    font-size: 1.125rem;
+  }
+  
+  .transitionArrowContainer {
+    width: 280px;
+    height: 60px;
+  }
+  
+  .transitionArrow {
+    width: 220px;
+    height: 5px;
+  }
+  
+  .transitionArrowHead {
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+    border-left: 16px solid #ea580c;
+    right: -8px;
+  }
+  
+  .transitionErrorContainer {
+    margin: 0 20px;
+    padding: 28px;
+  }
+  
+  .transitionHexagon1, .transitionHexagon2, .transitionHexagon3, .transitionHexagon4 {
+    opacity: 0.04;
+  }
+}
+
+@media (max-width: 480px) {
+  .transitionLogoMain, .transitionLogoAccent {
+    font-size: 2.5rem;
+  }
+  
+  .transitionLogoSubtext {
+    font-size: 1rem;
+  }
+  
+  .transitionArrowContainer {
+    width: 240px;
+    height: 50px;
+  }
+  
+  .transitionArrow {
+    width: 180px;
+    height: 4px;
+  }
+  
+  .transitionArrowHead {
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 14px solid #ea580c;
+    right: -7px;
+  }
+  
+  .transitionErrorContainer {
+    padding: 24px;
+  }
+  
+  .transitionRetryButton {
+    padding: 12px 24px;
+    font-size: 0.9rem;
+  }
+}
+
+/* 접근성 */
+@media (prefers-reduced-motion: reduce) {
+  .transitionContainer,
+  .transitionLogoMain,
+  .transitionLogoAccent,
+  .transitionArrow,
+  .transitionArrowHead,
+  .transitionStatusText,
+  .transitionDot {
+    animation: none;
+  }
+  
+  .transitionGeometricShape {
+    animation: none;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .transitionContainer {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+  
+  .transitionLogoMain {
+    color: #f1f5f9;
+  }
+  
+  .transitionStatusText {
+    color: #94a3b8;
+  }
+  
+  .transitionCopyright {
+    color: #64748b;
+  }
+}

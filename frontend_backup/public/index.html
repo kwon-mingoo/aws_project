@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <!-- 
+      [문서 메타 정보 설정]
+      - lang="ko" : 기본 언어를 한국어로 설정 (SEO, 접근성)
+      - charset="utf-8" : 한글·영문·기호 깨짐 방지
+      - viewport : 반응형(모바일/PC) 화면 크기 자동 조정
+      - theme-color : 브라우저 상단 주소창 색상 지정 (PWA 적용 시)
+    -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1f2a37" />
+    <meta name="description" content="AWS² GiOT — Air Watch System 메인" />
+
+    <!-- 
+      [파비콘 & PWA 리소스]
+      - favicon.ico : 브라우저 탭 아이콘
+      - logo192.png : 모바일 홈 화면 아이콘 (PWA)
+      - manifest.json : PWA 설정 파일
+      ⚠️ 주의: %PUBLIC_URL%은 빌드 시 public 폴더 경로로 치환됨
+    -->
+    <link rel="icon" href="%PUBLIC_URL%/images/logo1.png" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/images/logo1.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- 
+      [웹폰트 로드]
+      - 한글 UI 가독성을 위해 Noto Sans KR 사용
+      - 백엔드 API 데이터(예: 센서 이름, 대시보드 타이틀 등)도 한글이므로 폰트 통일 필요
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- 
+      [메인 이미지 사전 로드]
+      - 첫 진입(Main.jsx)에서 API 초기 점검 전 브랜딩 이미지를 바로 보여주기 위해 미리 로드
+      - 사용자 경험(UX) 향상: 이미지 로딩 대기 없이 즉시 표시
+    -->
+    <link rel="preload" as="image" href="%PUBLIC_URL%/images/logo1.png" />
+
+    <!-- 
+      [문서 제목]
+      - 브라우저 탭 이름, 북마크 제목으로 사용
+      - API 응답 데이터와 무관하며, 서비스 브랜딩용
+    -->
+    <title>IoT 센서 대시보드</title>
+  </head>
+
+  <body>
+    <!-- 
+      [JavaScript 비활성화 안내]
+      - React 앱은 JS 기반으로 작동하므로 JS가 꺼져있으면 안내 메시지 표시
+    -->
+    <noscript>이 앱을 사용하려면 자바스크립트를 활성화하세요.</noscript>
+
+    <!-- 
+      [React 마운트 포인트]
+      - #root : React가 실제 화면을 그리는 DOM 영역
+      - 빌드된 JS 번들이 여기에 주입되며, Main.jsx → API 호출 시작
+      - 백엔드 API 연동 순서:
+        1) index.js/main.jsx에서 App.jsx 로드
+        2) 라우터에 따라 Main.jsx 진입
+        3) Main.jsx → services/main.js의 enterMainView() 호출
+        4) API 응답에 따라 /dashboard 등으로 페이지 전환
+    -->
+    <div id="root"></div>
+
+    <!-- 
+      [주의 사항]
+      - 이 HTML 파일은 create-react-app 기준 "템플릿"이며,
+        화면 UI/기능은 전부 src/ 디렉토리의 JS/JSX에서 구현
+      - public 폴더의 파일들은 빌드 후에도 경로 그대로 유지되므로,
+        정적 리소스(이미지, 폰트 등)와 API 호출에 필요한 설정 파일만 둔다
+    -->
+  </body>
+</html>

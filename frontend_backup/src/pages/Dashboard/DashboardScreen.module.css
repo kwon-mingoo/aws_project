@@ -1,0 +1,1179 @@
+/* Dashboard.css - 대시보드 스타일시트 */
+
+/* 전체 레이아웃 컨테이너 */
+.dashboardContainer {
+  display: flex;
+  height: 100vh;
+  background-color: #f8f9fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* 사이드바 스타일 */
+.sidebar {
+  width: 256px;
+  background-color: #1f2937;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidebarHeader {
+  padding: 24px;
+  border-bottom: 1px solid #374151;
+}
+
+.sidebarTitle {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.sidebarMenu {
+  flex: 1;
+  padding: 16px 0;
+}
+
+.sidebarItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #d1d5db;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 0;
+}
+
+.sidebarItem:hover {
+  background-color: #374151;
+  color: white;
+}
+
+.sidebarItemActive {
+  background-color: #2563eb;
+  color: white;
+  border-left: 4px solid #60a5fa;
+}
+
+/* 메인 콘텐츠 영역 */
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 헤더 스타일 */
+.header {
+  background: white;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+}
+
+.pageTitle {
+  font-size: 28px;
+  font-weight: bold;
+  color: #1f2937;
+  margin: 0;
+}
+
+.pageSubtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 4px 0 0 0;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.headerItem {
+  position: relative;
+}
+
+/* 알림 버튼 스타일 */
+.headerButton {
+  position: relative;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headerButton:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 관리자 버튼 스타일 */
+.adminButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.adminButton:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+/* 드롭다운 스타일 */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  z-index: 1000;
+  max-height: 400px;
+  overflow: hidden;
+}
+
+.dropdownHeader {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.dropdownTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.notificationList {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notificationItem {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.notificationItem:hover {
+  background-color: #f8f9fa;
+}
+
+.notificationItem:last-child {
+  border-bottom: none;
+}
+
+.notificationItemUnread {
+  background-color: #eff6ff;
+  border-left: 3px solid #3b82f6;
+}
+
+.notificationMessage {
+  font-size: 14px;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+}
+
+.notificationTimestamp {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.emptyNotification {
+  padding: 32px 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.dropdownOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  border: none;
+  cursor: default;
+  z-index: 999;
+}
+
+/* 관리자 드롭다운 */
+.adminDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 200px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  z-index: 1000;
+}
+
+.adminDropdownContent {
+  padding: 8px 0;
+}
+
+.adminDropdownItem {
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.adminDropdownItem:hover {
+  background-color: #f3f4f6;
+}
+
+.adminDropdownLogout {
+  color: #dc2626;
+}
+
+.adminDropdownDivider {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 8px 0;
+}
+
+/* 대시보드 콘텐츠 */
+.dashboardContent {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+}
+
+/* 차트 섹션 */
+.chartSection {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.sensorSelector {
+  display: flex;
+  align-items: center;
+}
+
+.sensorSelect {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.sensorSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.chartCard {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 16px;
+  height: 320px;
+}
+
+.chartContainer {
+  width: 100%;
+  height: 100%;
+}
+
+/* 요약 섹션 */
+.summarySection {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.infoIcon {
+  color: #6b7280;
+  cursor: help;
+}
+
+.summaryCard {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.summaryTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.summaryTable thead {
+  background-color: #f8f9fa;
+}
+
+.summaryTable th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.summaryTable td {
+  padding: 16px;
+  font-size: 14px;
+  color: #1f2937;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.summaryTable td:first-child {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.summaryTable tr:hover {
+  background-color: #f8f9fa;
+}
+
+.summaryTable tr:last-child td {
+  border-bottom: none;
+}
+
+/* 상태별 스타일 */
+.statusGood {
+  color: #059669;
+  font-weight: 600;
+}
+
+.statusWarning {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.statusDanger {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* 로딩 및 에러 상태 */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  text-align: center;
+  padding: 20px;
+}
+
+.errorTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 8px 0;
+}
+
+.errorMessage {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 200px;
+  }
+  
+  .dashboardContent {
+    padding: 16px;
+  }
+  
+  .chartSection,
+  .summarySection {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboardContainer {
+    flex-direction: column;
+    height: 100vh;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0;
+  }
+  
+  .sidebarHeader {
+    padding: 16px;
+    min-width: 150px;
+  }
+  
+  .sidebarTitle {
+    font-size: 20px;
+  }
+  
+  .sidebarMenu {
+    display: flex;
+    padding: 16px 0;
+    min-width: 400px;
+  }
+  
+  .sidebarItem {
+    min-width: 100px;
+    padding: 12px 16px;
+    text-align: center;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 16px;
+  }
+  
+  .headerRight {
+    align-self: flex-end;
+  }
+  
+  .pageTitle {
+    font-size: 24px;
+  }
+  
+  .sectionHeader {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .dropdown {
+    width: 280px;
+    right: -20px;
+  }
+  
+  .adminDropdown {
+    right: -20px;
+  }
+  
+  .summaryCard {
+    overflow-x: scroll;
+  }
+  
+  .summaryTable {
+    min-width: 500px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboardContent {
+    padding: 12px;
+  }
+  
+  .chartSection,
+  .summarySection {
+    padding: 16px;
+  }
+  
+  .pageTitle {
+    font-size: 22px;
+  }
+  
+  .sectionTitle {
+    font-size: 16px;
+  }
+  
+  .chartCard {
+    height: 280px;
+  }
+  
+  .dropdown {
+    width: 280px;
+    right: -40px;
+  }
+  
+  .adminDropdown {
+    right: -60px;
+  }
+  
+  .summaryTable th,
+  .summaryTable td {
+    padding: 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 12px;
+  }
+  
+  .dashboardContent {
+    padding: 8px;
+  }
+  
+  .chartSection,
+  .summarySection {
+    padding: 12px;
+  }
+  
+  .pageTitle {
+    font-size: 20px;
+  }
+  
+  .pageSubtitle {
+    font-size: 12px;
+  }
+  
+  .sectionTitle {
+    font-size: 15px;
+  }
+  
+  .chartCard {
+    height: 250px;
+    padding: 12px;
+  }
+}
+
+/* Dashboard.module.css */
+
+/* Layout */
+.container {
+  display: flex;
+  height: 100vh;
+  background-color: #f3f4f6;
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 256px;
+  background-color: #1f2937;
+  display: flex;
+  flex-direction: column;
+}
+
+.logoSection {
+  padding: 24px;
+  border-bottom: 1px solid #374151;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoImage img {
+  width: 40px;
+  height: auto;
+  display: block; /* 이미지 밑에 여백 방지 */
+}
+
+.logoSubtext {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.navigation {
+  flex: 1;
+  padding: 16px 0;
+}
+
+.sidebarItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+.sidebarItem:hover {
+  background-color: #374151;
+}
+
+.sidebarItemActive {
+  background-color: #374151;
+  color: white;
+  border-right: 2px solid #60a5fa;
+}
+
+.sidebarItemIcon {
+  font-size: 18px;
+}
+
+.sidebarFooter {
+  padding: 16px;
+  border-top: 1px solid #374151;
+}
+
+.footerText {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Header */
+.header {
+  background: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+}
+
+.headerTitle {
+  font-size: 24px;
+  font-weight: bold;
+  color: #111827;
+}
+
+.headerSubtitle {
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Notification */
+.notificationContainer {
+  position: relative;
+}
+
+.notificationButton {
+  position: relative;
+  padding: 8px;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notificationButton:hover {
+  color: #111827;
+  background-color: #f3f4f6;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 12px;
+  border-radius: 50%;
+  height: 24px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 320px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  z-index: 50;
+}
+
+.dropdownHeader {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdownTitle {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.notificationList {
+  max-height: 384px;
+  overflow-y: auto;
+}
+
+.notificationItem {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.notificationItem:hover {
+  background-color: #f9fafb;
+}
+
+.notificationItemUnread {
+  background-color: #eff6ff;
+}
+
+.notificationMessage {
+  font-size: 14px;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.notificationTimestamp {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.emptyNotification {
+  padding: 16px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.dropdownOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+/* Admin Menu */
+.adminContainer {
+  position: relative;
+}
+
+.adminButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.adminButton:hover {
+  color: #111827;
+  background-color: #f3f4f6;
+}
+
+.adminAvatar {
+  width: 32px;
+  height: 32px;
+  background-color: #1f2937;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adminAvatarIcon {
+  color: white;
+}
+
+.adminLabel {
+  font-weight: 500;
+}
+
+.adminDropdown {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 192px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  z-index: 50;
+}
+
+.adminDropdownContent {
+  padding: 8px 0;
+}
+
+.adminDropdownItem {
+  width: 100%;
+  padding: 8px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.adminDropdownItem:hover {
+  background-color: #f3f4f6;
+}
+
+.adminDropdownLogout {
+  color: #dc2626;
+}
+
+.adminDropdownDivider {
+  margin: 8px 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Main Content */
+.mainContainer {
+  flex: 1;
+  padding: 24px;
+  overflow: auto;
+}
+
+.contentPlaceholder {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.contentTitle {
+  font-size: 24px;
+  font-weight: bold;
+  color: #374151;
+  margin-bottom: 16px;
+}
+
+.contentSubtitle {
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.contentNote {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+  
+  .dropdown {
+    width: 280px;
+  }
+  
+  .headerContent {
+    padding: 12px 16px;
+  }
+  
+  .mainContainer {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .headerContent {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .headerActions {
+    align-self: flex-end;
+  }
+}
+
+/* Mintrend Section Styles */
+.mintrendSection {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.mintrendCard {
+  padding: 24px;
+}
+
+.mintrendContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mintrendHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mintrendFilename {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.mintrendTimestamp {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.mintrendGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.mintrendItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.mintrendLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mintrendValue {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mintrendValue.temperature {
+  color: #dc2626;
+}
+
+.mintrendValue.humidity {
+  color: #2563eb;
+}
+
+.mintrendValue.gas {
+  color: #059669;
+}
+
+.mintrendStatus {
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  background-color: #e5e7eb;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: center;
+  width: fit-content;
+}
+
+.loadingState,
+.errorState,
+.noDataState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.loadingState p {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}
+
+.errorState p {
+  color: #dc2626;
+  font-size: 16px;
+  margin: 0 0 16px 0;
+}
+
+.retryButton {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.retryButton:hover {
+  background-color: #2563eb;
+}
+
+.noDataState p {
+  color: #9ca3af;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Responsive Mintrend Styles */
+@media (max-width: 768px) {
+  .mintrendGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .mintrendCard {
+    padding: 16px;
+  }
+  
+  .mintrendValue {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mintrendHeader {
+    text-align: center;
+  }
+  
+  .mintrendFilename {
+    font-size: 16px;
+  }
+  
+  .mintrendTimestamp {
+    font-size: 12px;
+  }
+  
+  .mintrendItem {
+    padding: 12px;
+  }
+  
+  .mintrendValue {
+    font-size: 18px;
+  }
+}

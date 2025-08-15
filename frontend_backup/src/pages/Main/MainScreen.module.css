@@ -1,0 +1,593 @@
+/* Main.css - 메인 화면 스타일 */
+
+/* 기본 레이아웃 */
+.mainContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9998;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.5s ease-out;
+}
+
+.mainContainer.fadeOut {
+  opacity: 0;
+}
+
+/* 배경 기하학적 패턴 */
+.mainGeometricBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.mainGeometricShape {
+  position: absolute;
+  border: 2px solid;
+  border-radius: 4px;
+  opacity: 0.08;
+}
+
+/* 육각형들 - 메인 화면용 배치 */
+.mainHexagon1 {
+  width: 300px;
+  height: 300px;
+  border-color: #fb923c;
+  top: 10%;
+  left: 10%;
+  transform: rotate(20deg);
+  animation: mainFloat 12s ease-in-out infinite;
+}
+
+.mainHexagon2 {
+  width: 400px;
+  height: 400px;
+  border-color: #cbd5e1;
+  top: 5%;
+  right: 5%;
+  transform: rotate(-25deg);
+  animation: mainFloat 16s ease-in-out infinite reverse;
+}
+
+.mainHexagon3 {
+  width: 200px;
+  height: 200px;
+  border-color: #fb923c;
+  bottom: 20%;
+  left: 20%;
+  transform: rotate(35deg);
+  animation: mainFloat 14s ease-in-out infinite;
+}
+
+.mainHexagon4 {
+  width: 350px;
+  height: 350px;
+  border-color: #cbd5e1;
+  bottom: 15%;
+  right: 15%;
+  transform: rotate(-40deg);
+  animation: mainFloat 18s ease-in-out infinite reverse;
+}
+
+/* 중앙 대형 육각형 */
+.mainCenterHexagon {
+  width: 500px;
+  height: 500px;
+  border-color: #e2e8f0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(0deg);
+  animation: mainRotate 20s linear infinite;
+  opacity: 0.05;
+}
+
+/* 선형 패턴들 */
+.mainLinePattern1 {
+  width: 600px;
+  height: 3px;
+  border: none;
+  background: linear-gradient(90deg, transparent 0%, #fb923c 50%, transparent 100%);
+  top: 25%;
+  left: 0%;
+  transform: rotate(12deg);
+  animation: mainShimmer 8s ease-in-out infinite;
+}
+
+.mainLinePattern2 {
+  width: 500px;
+  height: 3px;
+  border: none;
+  background: linear-gradient(90deg, transparent 0%, #cbd5e1 50%, transparent 100%);
+  bottom: 30%;
+  right: 0%;
+  transform: rotate(-18deg);
+  animation: mainShimmer 10s ease-in-out infinite reverse;
+}
+
+/* 메인 로고 영역 */
+.mainLogoContainer {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  animation: mainSlideIn 1.2s ease-out;
+}
+
+.mainLogoText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.mainLogoMain {
+  font-size: 5rem;
+  font-weight: 900;
+  color: #1e293b;
+  letter-spacing: -0.05em;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  animation: mainTextGlow 3s ease-in-out infinite alternate;
+}
+
+.mainLogoAccent {
+  font-size: 5rem;
+  font-weight: 900;
+  color: #fb923c;
+  letter-spacing: -0.05em;
+  text-shadow: 0 4px 8px rgba(251, 146, 60, 0.3);
+  animation: mainAccentGlow 3s ease-in-out infinite alternate;
+}
+
+.mainLogoSubtext {
+  font-size: 1.5rem;
+  color: #fb923c;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin-bottom: 40px;
+  opacity: 0.9;
+}
+
+/* 메인 화살표 - 더 크고 강조된 디자인 */
+.mainArrowContainer {
+  position: relative;
+  width: 400px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+.mainArrow {
+  position: relative;
+  width: 320px;
+  height: 8px;
+  background: linear-gradient(90deg, #fb923c 0%, #ea580c 100%);
+  border-radius: 4px;
+  box-shadow: 
+    0 4px 16px rgba(251, 146, 60, 0.4),
+    0 2px 8px rgba(251, 146, 60, 0.2);
+  animation: mainArrowPulse 2s ease-in-out infinite;
+}
+
+.mainArrowHead {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 16px solid transparent;
+  border-bottom: 16px solid transparent;
+  border-left: 24px solid #ea580c;
+  filter: drop-shadow(0 4px 8px rgba(251, 146, 60, 0.4));
+  animation: mainArrowHeadPulse 2s ease-in-out infinite;
+}
+
+/* 상태 표시 영역 */
+.statusContainer {
+  position: relative;
+  z-index: 10;
+  margin-top: 40px;
+  text-align: center;
+}
+
+.statusText {
+  color: #64748b;
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+  animation: mainPulse 2s ease-in-out infinite;
+}
+
+.statusIndicators {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: mainStatusBlink 2s ease-in-out infinite;
+}
+
+.statusDotConnected {
+  background-color: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.statusDotDisconnected {
+  background-color: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.statusLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* 에러 상태 */
+.mainErrorContainer {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: mainSlideIn 0.8s ease-out;
+}
+
+.mainErrorTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #dc2626;
+  margin-bottom: 16px;
+}
+
+.mainErrorMessage {
+  font-size: 1.125rem;
+  color: #64748b;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.mainRetryButton {
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(251, 146, 60, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mainRetryButton:hover {
+  background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(251, 146, 60, 0.5);
+}
+
+.mainRetryButton:active {
+  transform: translateY(-1px);
+}
+
+/* 하단 카피라이트 */
+.mainCopyright {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 500;
+  z-index: 10;
+  letter-spacing: 0.05em;
+}
+
+/* 클릭 힌트 */
+.clickHint {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #94a3b8;
+  font-size: 0.875rem;
+  z-index: 10;
+  animation: mainPulse 2s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+/* 애니메이션 키프레임 */
+@keyframes mainFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(var(--rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-30px) rotate(var(--rotate, 0deg));
+  }
+}
+
+@keyframes mainRotate {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes mainShimmer {
+  0%, 100% {
+    opacity: 0.08;
+    transform: translateX(-50px);
+  }
+  50% {
+    opacity: 0.15;
+    transform: translateX(50px);
+  }
+}
+
+@keyframes mainSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mainTextGlow {
+  from {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  to {
+    text-shadow: 0 4px 12px rgba(30, 41, 59, 0.2);
+  }
+}
+
+@keyframes mainAccentGlow {
+  from {
+    text-shadow: 0 4px 8px rgba(251, 146, 60, 0.3);
+  }
+  to {
+    text-shadow: 0 4px 16px rgba(251, 146, 60, 0.5);
+  }
+}
+
+@keyframes mainArrowPulse {
+  0%, 100% {
+    box-shadow: 
+      0 4px 16px rgba(251, 146, 60, 0.4),
+      0 2px 8px rgba(251, 146, 60, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 6px 24px rgba(251, 146, 60, 0.6),
+      0 4px 12px rgba(251, 146, 60, 0.3);
+  }
+}
+
+@keyframes mainArrowHeadPulse {
+  0%, 100% {
+    filter: drop-shadow(0 4px 8px rgba(251, 146, 60, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 6px 12px rgba(251, 146, 60, 0.6));
+  }
+}
+
+@keyframes mainPulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes mainStatusBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 페이드 아웃 트랜지션 */
+@keyframes mainFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+
+.mainContainer.transitioning {
+  animation: mainFadeOut 0.8s ease-out forwards;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .mainLogoMain, .mainLogoAccent {
+    font-size: 4rem;
+  }
+  
+  .mainLogoSubtext {
+    font-size: 1.25rem;
+  }
+  
+  .mainArrowContainer {
+    width: 350px;
+  }
+  
+  .mainArrow {
+    width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainLogoMain, .mainLogoAccent {
+    font-size: 3.5rem;
+  }
+  
+  .mainLogoSubtext {
+    font-size: 1.125rem;
+  }
+  
+  .mainArrowContainer {
+    width: 300px;
+    height: 60px;
+  }
+  
+  .mainArrow {
+    width: 240px;
+    height: 6px;
+  }
+  
+  .mainArrowHead {
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+    border-left: 18px solid #ea580c;
+    right: -9px;
+  }
+  
+  .statusIndicators {
+    gap: 16px;
+  }
+  
+  .mainErrorContainer {
+    margin: 0 20px;
+    padding: 32px;
+  }
+  
+  .mainHexagon1, .mainHexagon2, .mainHexagon3, .mainHexagon4 {
+    opacity: 0.04;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainLogoMain, .mainLogoAccent {
+    font-size: 2.5rem;
+  }
+  
+  .mainLogoSubtext {
+    font-size: 1rem;
+  }
+  
+  .mainArrowContainer {
+    width: 250px;
+    height: 50px;
+  }
+  
+  .mainArrow {
+    width: 200px;
+    height: 5px;
+  }
+  
+  .mainArrowHead {
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 15px solid #ea580c;
+    right: -7px;
+  }
+  
+  .statusIndicators {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .mainErrorContainer {
+    padding: 24px;
+  }
+  
+  .mainRetryButton {
+    padding: 12px 24px;
+    font-size: 1rem;
+  }
+}
+
+/* 접근성 */
+@media (prefers-reduced-motion: reduce) {
+  .mainContainer,
+  .mainLogoMain,
+  .mainLogoAccent,
+  .mainArrow,
+  .mainArrowHead,
+  .statusText,
+  .statusDot {
+    animation: none;
+  }
+  
+  .mainGeometricShape {
+    animation: none;
+  }
+}
+
+/* 다크 모드 지원 (선택사항) */
+@media (prefers-color-scheme: dark) {
+  .mainContainer {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+  
+  .mainLogoMain {
+    color: #f1f5f9;
+  }
+  
+  .statusText {
+    color: #94a3b8;
+  }
+  
+  .statusIndicator {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(51, 65, 85, 0.3);
+  }
+  
+  .mainCopyright {
+    color: #64748b;
+  }
+  
+  .clickHint {
+    color: #64748b;
+  }
+}

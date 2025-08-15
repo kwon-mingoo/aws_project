@@ -1,0 +1,946 @@
+/* History.css - 히스토리 화면 스타일 */
+
+/* Layout */
+.container {
+  display: flex;
+  height: 100vh;
+  background-color: #f3f4f6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 256px;
+  background-color: #1f2937;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.logoSection {
+  padding: 24px;
+  border-bottom: 1px solid #374151;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoMain {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+}
+
+.logoAccent {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fb923c;
+}
+
+.logoSubtext {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.navigation {
+  flex: 1;
+  padding: 16px 0;
+}
+
+.sidebarItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #d1d5db;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.sidebarItem:hover {
+  background-color: #374151;
+}
+
+.sidebarItemActive {
+  background-color: #374151;
+  color: white;
+  border-right: 2px solid #60a5fa;
+}
+
+.sidebarFooter {
+  padding: 16px;
+  border-top: 1px solid #374151;
+}
+
+.footerText {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Header */
+.header {
+  background: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+}
+
+.headerTitle {
+  font-size: 24px;
+  font-weight: bold;
+  color: #111827;
+  margin: 0;
+}
+
+.headerSubtitle {
+  color: #6b7280;
+  margin: 4px 0 0 0;
+  font-size: 14px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Notification */
+.notificationContainer {
+  position: relative;
+}
+
+.notificationButton {
+  position: relative;
+  padding: 8px;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notificationButton:hover {
+  color: #111827;
+  background-color: #f3f4f6;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 12px;
+  border-radius: 50%;
+  height: 24px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 320px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  z-index: 50;
+}
+
+.dropdownHeader {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdownTitle {
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.notificationList {
+  max-height: 384px;
+  overflow-y: auto;
+}
+
+.notificationItem {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.notificationItem:hover {
+  background-color: #f9fafb;
+}
+
+.notificationItemUnread {
+  background-color: #eff6ff;
+}
+
+.notificationMessage {
+  font-size: 14px;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.notificationTimestamp {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.emptyNotification {
+  padding: 16px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.dropdownOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+/* Admin Menu */
+.adminContainer {
+  position: relative;
+}
+
+.adminButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.adminButton:hover {
+  color: #111827;
+  background-color: #f3f4f6;
+}
+
+.adminAvatar {
+  width: 32px;
+  height: 32px;
+  background-color: #1f2937;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adminLabel {
+  font-weight: 500;
+}
+
+.adminDropdown {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 192px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  z-index: 50;
+}
+
+.adminDropdownContent {
+  padding: 8px 0;
+}
+
+.adminDropdownItem {
+  width: 100%;
+  padding: 8px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.adminDropdownItem:hover {
+  background-color: #f3f4f6;
+}
+
+.adminDropdownLogout {
+  color: #dc2626;
+}
+
+.adminDropdownDivider {
+  margin: 8px 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* 히스토리 메인 컨테이너 */
+.historyMain {
+  flex: 1;
+  padding: 24px;
+  overflow: auto;
+  background-color: #f9fafb;
+}
+
+.historyContent {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 필터 섹션 */
+.historyFilterSection {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.historyFilterHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.historyFilterToggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.historyFilterToggle:hover {
+  background-color: #f3f4f6;
+}
+
+.historyFilterIcon {
+  transition: transform 0.2s ease;
+}
+
+.historyFilterIcon.open {
+  transform: rotate(90deg);
+}
+
+.historyResetButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.historyResetButton:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.historyFilterContent {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.historyFilterContent.hidden {
+  display: none;
+}
+
+/* 필터 그룹 */
+.historyFilterGroup {
+  position: relative;
+}
+
+.historyFilterLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.historyFilterDropdown {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.historyFilterDropdown:hover {
+  border-color: #9ca3af;
+}
+
+.historyFilterDropdown.active {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.historyFilterDropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+  margin-top: 4px;
+}
+
+.historyFilterDropdownItem {
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: background-color 0.2s ease;
+}
+
+.historyFilterDropdownItem:hover {
+  background-color: #f3f4f6;
+}
+
+.historyFilterDropdownItem:first-child {
+  border-radius: 6px 6px 0 0;
+}
+
+.historyFilterDropdownItem:last-child {
+  border-radius: 0 0 6px 6px;
+}
+
+/* 날짜 선택 관련 */
+.historyDatePickerContainer {
+  position: relative;
+}
+
+.historyDatePicker {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  z-index: 30;
+  margin-top: 4px;
+  padding: 16px;
+  min-width: 280px;
+}
+
+.historyCalendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.historyCalendarNavButton {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.historyCalendarNavButton:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.historyCalendarMonthYear {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.historyCalendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.historyCalendarDayHeader {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  padding: 8px 4px;
+}
+
+.historyCalendarDay {
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.historyCalendarDay:hover {
+  background: #f3f4f6;
+}
+
+.historyCalendarDay.selected {
+  background: #1f2937;
+  color: white;
+}
+
+.historyCalendarDay.otherMonth {
+  color: #d1d5db;
+}
+
+.historyCalendarDay.today {
+  background: #3b82f6;
+  color: white;
+}
+
+.historyCalendarActions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.historyCheckNowButton {
+  padding: 8px 20px;
+  background: #1f2937;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.historyCheckNowButton:hover {
+  background: #111827;
+}
+
+/* 테이블 섹션 */
+.historyTableSection {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.historyTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.historyTableHeader {
+  background: #f9fafb;
+}
+
+.historyTableHeaderCell {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.historyTableRow {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s ease;
+}
+
+.historyTableRow:hover {
+  background-color: #f9fafb;
+}
+
+.historyTableCell {
+  padding: 16px;
+  color: #1f2937;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.historyEventId {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.historyTimestamp {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.historySensorType {
+  font-weight: 500;
+}
+
+.historyValue {
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.historyStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statusGood {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.statusNormal {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.statusWarning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* 페이지네이션 */
+.historyPagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 16px;
+}
+
+.historyPaginationButton {
+  width: 36px;
+  height: 36px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.historyPaginationButton:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.historyPaginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.historyPaginationInfo {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* 빈 상태 */
+.historyEmptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+}
+
+.historyEmptyStateIcon {
+  width: 64px;
+  height: 64px;
+  background-color: #f3f4f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.historyEmptyStateTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.historyEmptyStateDescription {
+  font-size: 14px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* 로딩 상태 */
+.historyLoading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+}
+
+.historyLoadingSpinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: historySpinAnimation 1s linear infinite;
+}
+
+@keyframes historySpinAnimation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.historyLoadingText {
+  margin-left: 12px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* 에러 상태 */
+.historyError {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 16px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 24px;
+  border-left: 4px solid #ef4444;
+}
+
+/* 드롭다운 오버레이 */
+.historyDropdownOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .historyMain {
+    padding: 16px;
+  }
+  
+  .historyFilterContent {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .historyTableSection {
+    padding: 16px;
+    overflow-x: auto;
+  }
+  
+  .historyTable {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 768px) {
+  .historyFilterHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .historyFilterContent {
+    grid-template-columns: 1fr;
+  }
+  
+  .historyTableHeaderCell,
+  .historyTableCell {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .historyDatePicker {
+    left: -100px;
+    right: -100px;
+    min-width: auto;
+  }
+  
+  .historyCalendarGrid {
+    gap: 1px;
+  }
+  
+  .historyCalendarDay {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .historyFilterSection,
+  .historyTableSection {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .historyPagination {
+    margin-top: 16px;
+    padding: 12px;
+  }
+  
+  .historyTable {
+    font-size: 12px;
+  }
+  
+  .historyStatusBadge {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .historyMain {
+    background-color: #111827;
+  }
+  
+  .historyFilterSection,
+  .historyTableSection {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .historyFilterToggle {
+    color: #f9fafb;
+  }
+  
+  .historyTable {
+    color: #f9fafb;
+  }
+  
+  .historyTableHeader {
+    background: #374151;
+  }
+  
+  .historyDatePicker {
+    background: #1f2937;
+    border-color: #374151;
+  }
+}
+
+/* 접근성 */
+@media (prefers-reduced-motion: reduce) {
+  .historyFilterIcon,
+  .historyLoadingSpinner,
+  .historyTableRow,
+  .historyPaginationButton {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* 인쇄 스타일 */
+@media print {
+  .historyFilterSection,
+  .historyPagination {
+    display: none;
+  }
+  
+  .historyTableSection {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  .historyTable {
+    font-size: 12px;
+  }
+  
+  .historyStatusBadge {
+    border: 1px solid #000;
+    background: none !important;
+    color: #000 !important;
+  }
+}

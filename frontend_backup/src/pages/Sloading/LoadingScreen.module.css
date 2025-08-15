@@ -1,0 +1,356 @@
+/* Loading.css - 로딩 화면 스타일 */
+
+/* 기본 레이아웃 */
+.loadingContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* 배경 기하학적 패턴 */
+.geometricBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.geometricShape {
+  position: absolute;
+  border: 2px solid;
+  border-radius: 4px;
+  opacity: 0.1;
+}
+
+/* 육각형 모양들 */
+.hexagon1 {
+  width: 200px;
+  height: 200px;
+  border-color: #fb923c;
+  top: 20%;
+  left: 15%;
+  transform: rotate(30deg);
+  animation: float 8s ease-in-out infinite;
+}
+
+.hexagon2 {
+  width: 300px;
+  height: 300px;
+  border-color: #cbd5e1;
+  top: 10%;
+  right: 10%;
+  transform: rotate(-15deg);
+  animation: float 12s ease-in-out infinite reverse;
+}
+
+.hexagon3 {
+  width: 150px;
+  height: 150px;
+  border-color: #fb923c;
+  bottom: 15%;
+  left: 25%;
+  transform: rotate(45deg);
+  animation: float 10s ease-in-out infinite;
+}
+
+.hexagon4 {
+  width: 250px;
+  height: 250px;
+  border-color: #cbd5e1;
+  bottom: 25%;
+  right: 20%;
+  transform: rotate(-30deg);
+  animation: float 14s ease-in-out infinite reverse;
+}
+
+/* 선형 패턴들 */
+.linePattern1 {
+  width: 400px;
+  height: 2px;
+  border: none;
+  background: linear-gradient(90deg, transparent 0%, #fb923c 50%, transparent 100%);
+  top: 30%;
+  left: 5%;
+  transform: rotate(15deg);
+  animation: shimmer 6s ease-in-out infinite;
+}
+
+.linePattern2 {
+  width: 350px;
+  height: 2px;
+  border: none;
+  background: linear-gradient(90deg, transparent 0%, #cbd5e1 50%, transparent 100%);
+  bottom: 40%;
+  right: 5%;
+  transform: rotate(-20deg);
+  animation: shimmer 8s ease-in-out infinite reverse;
+}
+
+/* 메인 로고 영역 */
+.logoContainer {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.logoText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.logoMain {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #1e293b;
+  letter-spacing: -0.05em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logoAccent {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #fb923c;
+  letter-spacing: -0.05em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logoSubtext {
+  font-size: 1.25rem;
+  color: #fb923c;
+  font-weight: 500;
+  margin-top: 8px;
+  letter-spacing: 0.05em;
+}
+
+/* 화살표 애니메이션 영역 */
+.arrowContainer {
+  position: relative;
+  width: 300px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.arrow {
+  position: relative;
+  height: 4px;
+  background: #fb923c;
+  border-radius: 2px;
+  transition: width 0.5s ease-out;
+  box-shadow: 0 2px 8px rgba(251, 146, 60, 0.3);
+}
+
+.arrowHead {
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 12px solid #fb923c;
+  filter: drop-shadow(0 2px 4px rgba(251, 146, 60, 0.3));
+}
+
+/* 진행 단계별 스타일 */
+.arrowStage1 { width: 60px; }
+.arrowStage2 { width: 120px; }
+.arrowStage3 { width: 180px; }
+.arrowStage4 { width: 240px; }
+
+/* 로딩 텍스트 */
+.loadingText {
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-top: 24px;
+  opacity: 0.8;
+}
+
+/* 에러 상태 */
+.errorContainer {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.errorTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #dc2626;
+  margin-bottom: 12px;
+}
+
+.errorMessage {
+  font-size: 1rem;
+  color: #64748b;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.retryButton {
+  padding: 12px 24px;
+  background: #fb923c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(251, 146, 60, 0.3);
+}
+
+.retryButton:hover {
+  background: #ea580c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(251, 146, 60, 0.4);
+}
+
+.retryButton:active {
+  transform: translateY(0);
+}
+
+/* 하단 카피라이트 */
+.copyright {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 10;
+}
+
+/* 애니메이션 키프레임 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(var(--rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-20px) rotate(var(--rotate, 0deg));
+  }
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 로딩 진입 애니메이션 */
+.loadingContainer {
+  animation: slideIn 0.8s ease-out;
+}
+
+.logoMain, .logoAccent {
+  animation: slideIn 1s ease-out 0.2s both;
+}
+
+.logoSubtext {
+  animation: slideIn 1s ease-out 0.4s both;
+}
+
+.arrowContainer {
+  animation: slideIn 1s ease-out 0.6s both;
+}
+
+.loadingText {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .logoMain, .logoAccent {
+    font-size: 3rem;
+  }
+  
+  .logoSubtext {
+    font-size: 1rem;
+  }
+  
+  .arrowContainer {
+    width: 250px;
+  }
+  
+  .arrowStage1 { width: 50px; }
+  .arrowStage2 { width: 100px; }
+  .arrowStage3 { width: 150px; }
+  .arrowStage4 { width: 200px; }
+  
+  .errorContainer {
+    margin: 0 20px;
+    padding: 24px;
+  }
+  
+  .hexagon1, .hexagon2, .hexagon3, .hexagon4 {
+    opacity: 0.05;
+  }
+}
+
+@media (max-width: 480px) {
+  .logoMain, .logoAccent {
+    font-size: 2.5rem;
+  }
+  
+  .logoSubtext {
+    font-size: 0.875rem;
+  }
+  
+  .arrowContainer {
+    width: 200px;
+  }
+  
+  .arrowStage1 { width: 40px; }
+  .arrowStage2 { width: 80px; }
+  .arrowStage3 { width: 120px; }
+  .arrowStage4 { width: 160px; }
+}
