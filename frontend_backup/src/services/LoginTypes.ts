@@ -18,9 +18,29 @@ export async function loginApi(form: LoginFormData): Promise<void> {
 }
 
 export async function verifyCodeApi(form: CodeFormData): Promise<void> {
-  await new Promise((r) => setTimeout(r, 800));
-  // 예: 특정 코드만 성공시키고 싶다면
-  // if (form.code !== "123456") throw new Error("INVALID_CODE");
+  try {
+const response = await fetch(`/login/code/${form.code}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('NETWORK_ERROR');
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error('INVALID_CODE');
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('INVALID_CODE');
+  }
 }
 
 export async function requestCodeApi(): Promise<void> {

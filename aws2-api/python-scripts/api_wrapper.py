@@ -12,13 +12,11 @@ try:
         build_prompt, 
         build_general_prompt,
         generate_answer_with_nova,
-
         show_last_detail_if_any,
         expand_followup_query_with_last_window,
         save_turn_to_s3,
-        SESSION_ID,
-        TURN_ID,
-        HISTORY,
+        get_or_create_session,
+        cleanup_expired_sessions,
         ENABLE_CHATLOG_SAVE,
         RELEVANCE_THRESHOLD,
         extract_datetime_strings,
@@ -29,7 +27,8 @@ try:
         _reset_last_ctx
     )
     
-    global TURN_ID, HISTORY
+    # 만료된 세션 정리
+    cleanup_expired_sessions()
     
 except ImportError as e:
     print(json.dumps({
@@ -38,36 +37,37 @@ except ImportError as e:
     }), file=sys.stderr)
     sys.exit(1)
 
-def process_query(query: str) -> dict:
+def process_query(query: str, session_id: str = None) -> dict:
     """
-    단일 질의를 처리하고 결과를 반환
+    단일 질의를 처리하고 결과를 반환 (다중 사용자 지원)
     """
-    global TURN_ID, HISTORY
-    
     try:
         start_time = datetime.now()
         
+        # 세션 가져오기 또는 생성
+        session = get_or_create_session(session_id)
+        
         # 상세 재요청 처리
-        detail_ans = show_last_detail_if_any(query)
+        detail_ans = show_last_detail_if_any(query, session=session)
         if detail_ans:
+            turn_id = session.increment_turn()
             result = {
                 "answer": detail_ans,
                 "route": "sensor_detail",
-                "session_id": SESSION_ID,
-                "turn_id": TURN_ID + 1,
+                "session_id": session.session_id,
+                "turn_id": turn_id,
                 "processing_time": (datetime.now() - start_time).total_seconds(),
                 "mode": "context_reuse"
             }
             
             if ENABLE_CHATLOG_SAVE:
-                TURN_ID += 1
-                HISTORY.append({"query": query, "answer": detail_ans, "route": "sensor"})
-                save_turn_to_s3(SESSION_ID, TURN_ID, "sensor", query, detail_ans, top_docs=[])
+                session.add_to_history(query, detail_ans, "sensor")
+                save_turn_to_s3(session.session_id, turn_id, "sensor", query, detail_ans, top_docs=[])
             
             return result
 
         # 후속질문 확장
-        expanded_query = expand_followup_query_with_last_window(query)
+        expanded_query = expand_followup_query_with_last_window(query, session=session)
         if expanded_query != query:
             query = expanded_query
 
@@ -76,27 +76,27 @@ def process_query(query: str) -> dict:
 
         if route == "general":
             # 일반 질문 처리
-            prompt = build_general_prompt(query, history=HISTORY)
+            prompt = build_general_prompt(query, history=session.history)
             answer = generate_answer_with_nova(prompt)
             
+            turn_id = session.increment_turn()
             result = {
                 "answer": answer,
                 "route": "general",
-                "session_id": SESSION_ID,
-                "turn_id": TURN_ID + 1,
+                "session_id": session.session_id,
+                "turn_id": turn_id,
                 "processing_time": (datetime.now() - start_time).total_seconds(),
                 "mode": "general_llm"
             }
             
-            TURN_ID += 1
-            HISTORY.append({"query": query, "answer": answer, "route": "general"})
+            session.add_to_history(query, answer, "general")
             if ENABLE_CHATLOG_SAVE:
-                save_turn_to_s3(SESSION_ID, TURN_ID, "general", query, answer, top_docs=[])
+                save_turn_to_s3(session.session_id, turn_id, "general", query, answer, top_docs=[])
             
             return result
 
         # 센서 질문 처리
-        _reset_last_ctx()
+        _reset_last_ctx(session=session)
 
         # S3 로그에서 캐시된 데이터 확인
         cached_sensor_data = find_sensor_data_from_s3_logs(query)
@@ -104,7 +104,7 @@ def process_query(query: str) -> dict:
         if cached_sensor_data:
             # 캐시된 데이터로 빠른 응답
             cached_dt = datetime.strptime(cached_sensor_data['timestamp'], '%Y-%m-%d %H:%M:%S')
-            set_followup_timestamp(cached_dt)
+            set_followup_timestamp(cached_dt, session=session)
             
             need_fields = detect_fields_in_query(query)
             response_parts = []
@@ -120,19 +120,19 @@ def process_query(query: str) -> dict:
             if response_parts:
                 quick_answer = f"{timestamp_str}: {', '.join(response_parts)}"
                 
+                turn_id = session.increment_turn()
                 result = {
                     "answer": quick_answer,
                     "route": "sensor_cache",
-                    "session_id": SESSION_ID,
-                    "turn_id": TURN_ID + 1,
+                    "session_id": session.session_id,
+                    "turn_id": turn_id,
                     "processing_time": (datetime.now() - start_time).total_seconds(),
                     "mode": "cached_data"
                 }
                 
-                TURN_ID += 1
-                HISTORY.append({"query": query, "answer": quick_answer, "route": "sensor_cache"})
+                session.add_to_history(query, quick_answer, "sensor_cache")
                 if ENABLE_CHATLOG_SAVE:
-                    save_turn_to_s3(SESSION_ID, TURN_ID, "sensor_cache", query, quick_answer, top_docs=[])
+                    save_turn_to_s3(session.session_id, turn_id, "sensor_cache", query, quick_answer, top_docs=[])
                 
                 return result
 
@@ -149,45 +149,54 @@ def process_query(query: str) -> dict:
         use_rag = has_sensor_data and (top_docs[0]["score"] >= RELEVANCE_THRESHOLD)
         
         if use_rag:
-            prompt = build_prompt(query, context, history=HISTORY)
+            prompt = build_prompt(query, context, history=session.history)
             
             # 타임스탬프 추출 및 저장
             dt_strings = extract_datetime_strings(query)
             for ds in dt_strings:
                 dt = parse_dt(ds)
                 if dt:
-                    set_followup_timestamp(dt)
+                    set_followup_timestamp(dt, session=session)
                     break
         else:
-            prompt = build_general_prompt(query, history=HISTORY)
+            prompt = build_general_prompt(query, history=session.history)
         
         answer = generate_answer_with_nova(prompt)
         
+        turn_id = session.increment_turn()
         result = {
             "answer": answer,
             "route": "sensor" if use_rag else "general",
-            "session_id": SESSION_ID,
-            "turn_id": TURN_ID + 1,
+            "session_id": session.session_id,
+            "turn_id": turn_id,
             "processing_time": (datetime.now() - start_time).total_seconds(),
             "mode": "rag" if use_rag else "general_llm",
             "docs_found": len(top_docs) if top_docs else 0,
             "top_score": top_docs[0]["score"] if top_docs else 0
         }
         
-        TURN_ID += 1
-        HISTORY.append({"query": query, "answer": answer, "route": "sensor" if use_rag else "general"})
+        session.add_to_history(query, answer, "sensor" if use_rag else "general")
         if ENABLE_CHATLOG_SAVE:
-            save_turn_to_s3(SESSION_ID, TURN_ID, "sensor" if use_rag else "general", query, answer, top_docs=top_docs)
+            save_turn_to_s3(session.session_id, turn_id, "sensor" if use_rag else "general", query, answer, top_docs=top_docs)
         
         return result
 
     except Exception as e:
+        # 세션이 생성되지 않은 경우를 위한 fallback
+        try:
+            session = get_or_create_session(session_id)
+            error_session_id = session.session_id
+            error_turn_id = session.turn_id
+        except:
+            error_session_id = "error"
+            error_turn_id = 0
+            
         error_msg = f"챗봇 처리 중 오류가 발생했습니다: {str(e)}"
         return {
             "answer": error_msg,
             "route": "error",
-            "session_id": SESSION_ID,
-            "turn_id": TURN_ID,
+            "session_id": error_session_id,
+            "turn_id": error_turn_id,
             "processing_time": (datetime.now() - start_time).total_seconds(),
             "mode": "error",
             "error": str(e),
@@ -200,6 +209,9 @@ def main():
     명령행 인자 또는 stdin으로 질문을 받고 JSON 응답 출력
     """
     try:
+        query = ""
+        session_id = None
+        
         # 명령행 인자로 질문을 받는 경우
         if len(sys.argv) > 1:
             query = " ".join(sys.argv[1:])
@@ -208,29 +220,41 @@ def main():
             try:
                 input_data = json.loads(sys.stdin.read())
                 query = input_data.get("query", "")
+                session_id = input_data.get("session_id")  # 세션 ID 추출
             except json.JSONDecodeError:
                 # 단순 텍스트 입력인 경우
                 query = sys.stdin.read().strip()
         
         if not query:
+            # 세션 생성해서 에러 응답에 포함
+            session = get_or_create_session(session_id)
             result = {
                 "error": "No query provided",
-                "session_id": SESSION_ID,
-                "turn_id": TURN_ID
+                "session_id": session.session_id,
+                "turn_id": session.turn_id
             }
         else:
-            result = process_query(query)
+            result = process_query(query, session_id)
         
         # JSON 응답 출력
         print(json.dumps(result, ensure_ascii=False, indent=2))
         
     except Exception as e:
+        # 에러 시에도 기본 세션 생성
+        try:
+            session = get_or_create_session(None)
+            error_session_id = session.session_id
+            error_turn_id = session.turn_id
+        except:
+            error_session_id = "error"
+            error_turn_id = 0
+            
         error_result = {
             "error": "API wrapper error",
             "details": str(e),
             "traceback": traceback.format_exc(),
-            "session_id": SESSION_ID,
-            "turn_id": TURN_ID
+            "session_id": error_session_id,
+            "turn_id": error_turn_id
         }
         print(json.dumps(error_result, ensure_ascii=False, indent=2))
         sys.exit(1)

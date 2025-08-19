@@ -27,7 +27,7 @@ module.exports = {
     {
       name: 'aws2-giot-frontend',
       script: 'npx',
-      args: 'serve -s build -l 3002',
+      args: `serve -s build -l ${process.env.PORT || 3002}`,
       cwd: '/home/ec2-user/app/frontend_backup',
       instances: 1,
       autorestart: true,

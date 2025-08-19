@@ -1,4 +1,5 @@
 // TransitionTypes.ts - 중간 로딩 화면 타입 정의
+import { ENV_CONFIG } from '../config/env';
 
 export interface TransitionRequest {
   event: 'transition_request';
@@ -31,7 +32,7 @@ export interface TransitionState {
 
 // 중간 로딩 API 클래스
 export class TransitionAPI {
-  private static readonly API_ENDPOINT = '/api/transition/initialize';
+  private static readonly API_ENDPOINT = `${ENV_CONFIG.API_BASE_URL}/api/transition/initialize`;
   private static readonly TIMEOUT_DURATION = 5000; // 5초
 
   static async initializeTransition(targetRole: 'admin' | 'user'): Promise<TransitionResponse | TransitionError> {

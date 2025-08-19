@@ -1,8 +1,8 @@
 // TransitionScreen.tsx - 전환 로딩 화면 컴포넌트
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  TransitionState, 
-  TransitionAPI, 
+import {
+  TransitionState,
+  TransitionAPI,
   TransitionUtils,
   TransitionResponse,
   TransitionError
@@ -18,36 +18,36 @@ interface TransitionScreenProps {
 const TransitionGeometricBackground: React.FC = () => (
   <div className={styles.transitionGeometricBackground}>
     {/* 육각형들 */}
-    <div 
+    <div
       className={`${styles.transitionGeometricShape} ${styles.transitionHexagon1}`}
       style={{ '--rotate': '25deg' } as React.CSSProperties}
     />
-    <div 
+    <div
       className={`${styles.transitionGeometricShape} ${styles.transitionHexagon2}`}
       style={{ '--rotate': '-20deg' } as React.CSSProperties}
     />
-    <div 
+    <div
       className={`${styles.transitionGeometricShape} ${styles.transitionHexagon3}`}
       style={{ '--rotate': '40deg' } as React.CSSProperties}
     />
-    <div 
+    <div
       className={`${styles.transitionGeometricShape} ${styles.transitionHexagon4}`}
       style={{ '--rotate': '-35deg' } as React.CSSProperties}
     />
-    <div 
+    <div
       className={`${styles.transitionGeometricShape} ${styles.transitionCenterHexagon}`}
       style={{ '--rotate': '0deg' } as React.CSSProperties}
     />
-    
+
     {/* 선형 패턴들 */}
     <div className={`${styles.transitionGeometricShape} ${styles.transitionLinePattern1}`} />
     <div className={`${styles.transitionGeometricShape} ${styles.transitionLinePattern2}`} />
   </div>
 );
 
-const TransitionScreen: React.FC<TransitionScreenProps> = ({ 
-  targetRole = 'admin', 
-  onTransitionComplete 
+const TransitionScreen: React.FC<TransitionScreenProps> = ({
+  targetRole = 'admin',
+  onTransitionComplete
 }) => {
   const [transitionState, setTransitionState] = useState<TransitionState>({
     isTransitioning: true,
@@ -68,14 +68,14 @@ const TransitionScreen: React.FC<TransitionScreenProps> = ({
     let currentProgress = 0;
     const progressInterval = setInterval(() => {
       currentProgress += Math.random() * 12 + 8; // 8-20씩 증가 (빠른 전환)
-      
+
       if (currentProgress >= 100) {
         currentProgress = 100;
         clearInterval(progressInterval);
       }
-      
+
       const arrowOpacity = TransitionUtils.calculateArrowOpacity(currentProgress);
-      
+
       setTransitionState(prev => ({
         ...prev,
         progress: currentProgress,
@@ -110,11 +110,11 @@ const TransitionScreen: React.FC<TransitionScreenProps> = ({
 
       // API 호출 (개발 시에는 목 데이터 사용)
       const response = await TransitionAPI.generateMockResponse(targetRole); // 실제로는 TransitionAPI.prepareTransition(targetRole) 사용
-      
+
       // 타입 가드로 응답 확인
       if ('status' in response) {
         const transitionResponse = response as TransitionResponse;
-        
+
         if (transitionResponse.status === 'transition_ready') {
           setTransitionState(prev => ({
             ...prev,
@@ -146,10 +146,10 @@ const TransitionScreen: React.FC<TransitionScreenProps> = ({
 
       // 진행률 애니메이션 정리
       clearInterval(progressInterval);
-      
+
     } catch (error) {
       console.error('전환 초기화 실패:', error);
-      
+
       setTransitionState(prev => ({
         ...prev,
         isTransitioning: false,
@@ -164,13 +164,11 @@ const TransitionScreen: React.FC<TransitionScreenProps> = ({
 
   // 전환 완료 처리
   const handleTransitionComplete = useCallback(() => {
-    setIsFadingOut(true);
-    
-    // 페이드 아웃 애니메이션 후 전환
-    setTimeout(() => {
-      TransitionUtils.clearTransitionFlag();
-      onTransitionComplete();
-    }, 800);
+    // 1) 전환 플래그 정리
+    TransitionUtils.clearTransitionFlag();
+    // 2) 즉시 라우팅 (뒤 화면을 노출할 틈을 주지 않음)
+    onTransitionComplete();
+    // 3) fade-out은 사용하지 않음: 언마운트로 자연스럽게 사라짐
   }, [onTransitionComplete]);
 
   // 재시도 핸들러
@@ -225,11 +223,10 @@ const TransitionScreen: React.FC<TransitionScreenProps> = ({
 
   // 애니메이션 단계 계산
   const animationStage = TransitionUtils.getAnimationStage(transitionState.progress);
-  const arrowStageClass = styles[`transitionArrowStage${
-    animationStage === 'start' ? '1' : 
-    animationStage === 'middle' ? '2' : 
-    animationStage === 'intense' ? '3' : 'Complete'
-  }`];
+  const arrowStageClass = styles[`transitionArrowStage${animationStage === 'start' ? '1' :
+      animationStage === 'middle' ? '2' :
+        animationStage === 'intense' ? '3' : 'Complete'
+    }`];
 
   // 진행률에 따른 상태 메시지
   const getStatusMessage = () => {
@@ -248,7 +245,7 @@ const TransitionScreen: React.FC<TransitionScreenProps> = ({
     <div className={`${styles.transitionContainer} ${isFadingOut ? styles.fadeOut : ''}`}>
       {/* 배경 기하학적 패턴 */}
       <TransitionGeometricBackground />
-      
+
       {/* 메인 전환 콘텐츠 */}
       {transitionState.error ? (
         // 에러 상태
@@ -256,7 +253,7 @@ const TransitionScreen: React.FC<TransitionScreenProps> = ({
           <div className={styles.transitionErrorTitle}>전환 실패</div>
           <div className={styles.transitionErrorMessage}>{transitionState.error}</div>
           {transitionState.showRetryButton && (
-            <button 
+            <button
               className={styles.transitionRetryButton}
               onClick={handleRetry}
             >
@@ -274,20 +271,20 @@ const TransitionScreen: React.FC<TransitionScreenProps> = ({
             </div>
             <div className={styles.transitionLogoSubtext}>Air Watch System</div>
           </div>
-          
+
           {/* 점점 선명해지는 화살표 */}
           <div className={`${styles.transitionArrowContainer} ${arrowStageClass}`}>
-            <div 
+            <div
               className={styles.transitionArrow}
               style={{ opacity: transitionState.arrowOpacity }}
             >
-              <div 
+              <div
                 className={styles.transitionArrowHead}
                 style={{ opacity: transitionState.arrowOpacity }}
               />
             </div>
           </div>
-          
+
           {/* 상태 메시지 */}
           <div className={styles.transitionStatusContainer}>
             <div className={styles.transitionStatusText}>
@@ -299,7 +296,7 @@ const TransitionScreen: React.FC<TransitionScreenProps> = ({
           </div>
         </>
       )}
-      
+
       {/* 하단 카피라이트 */}
       <div className={styles.transitionCopyright}>
         2025 GBSA AWS

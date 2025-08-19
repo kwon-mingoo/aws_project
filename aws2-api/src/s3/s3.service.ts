@@ -295,32 +295,62 @@ export class S3Service {
     console.log('mintrend 폴더에서 최신 파일 검색 중...');
 
     try {
-      const command = new ListObjectsV2Command({
-        Bucket: this.bucket,
-        Prefix: 'mintrend/',
-        MaxKeys: 1000,
-      });
+      // 현재 날짜부터 역순으로 검색하여 최신 파일 찾기
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      // 최대 7일 전까지 검색
+      for (let i = 0; i < 7; i++) {
+        const searchDate = new Date(today);
+        searchDate.setDate(today.getDate() - i);
+        
+        const year = searchDate.getFullYear();
+        const month = String(searchDate.getMonth() + 1).padStart(2, '0');
+        const day = String(searchDate.getDate()).padStart(2, '0');
+        
+        console.log(`📅 ${year}-${month}-${day} 날짜 검색 중...`);
+        
+        // 해당 날짜의 모든 시간대를 역순으로 검색 (23시부터 0시까지)
+        for (let hour = 23; hour >= 0; hour--) {
+          const hourStr = hour.toString().padStart(2, '0');
+          const prefix = `mintrend/${year}/${month}/${day}/${hourStr}/`;
+          
+          const command = new ListObjectsV2Command({
+            Bucket: this.bucket,
+            Prefix: prefix,
+            MaxKeys: 100,
+          });
 
-      const response = await this.s3.send(command);
-      const objects = response.Contents || [];
+          const response = await this.s3.send(command);
+          const objects = response.Contents || [];
+          
+          if (objects.length === 0) continue;
+          
+          // JSON 파일만 필터링하고 파일명 타임스탬프 기준으로 정렬
+          const jsonFiles = objects
+            .filter((obj) => obj.Key && obj.Key.endsWith('.json'))
+            .sort((a, b) => {
+              const extractTimestamp = (key: string) => {
+                const filename = key.split('/').pop() || '';
+                const match = filename.match(/^(\d{12})/);
+                return match ? parseInt(match[1]) : 0;
+              };
+              
+              const timestampA = extractTimestamp(a.Key || '');
+              const timestampB = extractTimestamp(b.Key || '');
+              return timestampB - timestampA; // 최신 순으로 정렬
+            });
 
-      // JSON 파일만 필터링하고 LastModified 기준으로 정렬
-      const jsonFiles = objects
-        .filter((obj) => obj.Key && obj.Key.endsWith('.json'))
-        .sort((a, b) => {
-          const dateA = a.LastModified?.getTime() || 0;
-          const dateB = b.LastModified?.getTime() || 0;
-          return dateB - dateA; // 최신 순으로 정렬
-        });
-
-      if (jsonFiles.length === 0) {
-        console.log('mintrend 폴더에 JSON 파일이 없습니다.');
-        return null;
+          if (jsonFiles.length > 0) {
+            const latestFile = jsonFiles[0].Key!;
+            console.log(`✅ 최신 mintrend 파일 발견: ${latestFile}`);
+            return latestFile;
+          }
+        }
       }
 
-      const latestFile = jsonFiles[0].Key!;
-      console.log(`✅ 최신 mintrend 파일 발견: ${latestFile}`);
-      return latestFile;
+      console.log('❌ 최근 7일 내에 mintrend 파일을 찾을 수 없습니다.');
+      return null;
     } catch (error) {
       console.error('mintrend 폴더 검색 중 오류 발생:', error);
       return null;

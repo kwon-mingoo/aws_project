@@ -7,14 +7,23 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  /* 배경을 ‘완전 불투명’으로 유지해 뒤 화면이 절대 비치지 않게 */
+  background: #ffffff;
+  /* 기본(완전 흰색) */
+  /* 위 한 줄을 유지하면서, 그 위에 그라디언트를 한겹 더 입히려면 아래 ::before 사용 */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 9997;
+  z-index: 2147483647;
+  /* 최상위 고정(브라우저 한계치에 가깝게) */
   overflow: hidden;
+  pointer-events: all;
+  /* 뒤 화면과의 모든 상호작용 차단 */
+  will-change: opacity, transform;
+  /* 페인트 최적화로 깜빡임 최소화 */
 }
+
 
 .transitionContainer.fadeOut {
   opacity: 0;
@@ -219,7 +228,7 @@
 .transitionArrowStage4 {
   opacity: 1;
   transform: scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 4px 16px rgba(251, 146, 60, 0.4),
     0 2px 8px rgba(251, 146, 60, 0.2);
 }
@@ -325,9 +334,12 @@
 
 /* 애니메이션 키프레임 */
 @keyframes transitionFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px) rotate(var(--rotate, 0deg));
   }
+
   50% {
     transform: translateY(-25px) rotate(var(--rotate, 0deg));
   }
@@ -337,16 +349,20 @@
   from {
     transform: translateY(-50%) rotate(45deg);
   }
+
   to {
     transform: translateY(-50%) rotate(405deg);
   }
 }
 
 @keyframes transitionShimmer {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.06;
     transform: translateX(-40px) rotate(var(--rotate, 0deg));
   }
+
   50% {
     opacity: 0.12;
     transform: translateX(40px) rotate(var(--rotate, 0deg));
@@ -358,6 +374,7 @@
     opacity: 0;
     transform: translateY(25px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -365,9 +382,12 @@
 }
 
 @keyframes transitionPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.8;
   }
+
   50% {
     opacity: 1;
   }
@@ -375,13 +395,16 @@
 
 /* 화살표 강조 애니메이션 */
 @keyframes transitionArrowGlow {
-  0%, 100% {
-    box-shadow: 
+
+  0%,
+  100% {
+    box-shadow:
       0 3px 12px rgba(251, 146, 60, 0.3),
       0 1px 4px rgba(251, 146, 60, 0.2);
   }
+
   50% {
-    box-shadow: 
+    box-shadow:
       0 5px 20px rgba(251, 146, 60, 0.5),
       0 3px 8px rgba(251, 146, 60, 0.3);
   }
@@ -397,6 +420,7 @@
     opacity: 1;
     transform: scale(1);
   }
+
   to {
     opacity: 0;
     transform: scale(1.02);
@@ -409,89 +433,98 @@
 
 /* 반응형 디자인 */
 @media (max-width: 1024px) {
-  .transitionLogoMain, .transitionLogoAccent {
+
+  .transitionLogoMain,
+  .transitionLogoAccent {
     font-size: 3.5rem;
   }
-  
+
   .transitionLogoSubtext {
     font-size: 1.25rem;
   }
-  
+
   .transitionArrowContainer {
     width: 320px;
   }
-  
+
   .transitionArrow {
     width: 260px;
   }
 }
 
 @media (max-width: 768px) {
-  .transitionLogoMain, .transitionLogoAccent {
+
+  .transitionLogoMain,
+  .transitionLogoAccent {
     font-size: 3rem;
   }
-  
+
   .transitionLogoSubtext {
     font-size: 1.125rem;
   }
-  
+
   .transitionArrowContainer {
     width: 280px;
     height: 60px;
   }
-  
+
   .transitionArrow {
     width: 220px;
     height: 5px;
   }
-  
+
   .transitionArrowHead {
     border-top: 12px solid transparent;
     border-bottom: 12px solid transparent;
     border-left: 16px solid #ea580c;
     right: -8px;
   }
-  
+
   .transitionErrorContainer {
     margin: 0 20px;
     padding: 28px;
   }
-  
-  .transitionHexagon1, .transitionHexagon2, .transitionHexagon3, .transitionHexagon4 {
+
+  .transitionHexagon1,
+  .transitionHexagon2,
+  .transitionHexagon3,
+  .transitionHexagon4 {
     opacity: 0.04;
   }
 }
 
 @media (max-width: 480px) {
-  .transitionLogoMain, .transitionLogoAccent {
+
+  .transitionLogoMain,
+  .transitionLogoAccent {
     font-size: 2.5rem;
   }
-  
+
   .transitionLogoSubtext {
     font-size: 1rem;
   }
-  
+
   .transitionArrowContainer {
     width: 240px;
     height: 50px;
   }
-  
+
   .transitionArrow {
     width: 180px;
     height: 4px;
   }
-  
+
   .transitionArrowHead {
     border-top: 10px solid transparent;
     border-bottom: 10px solid transparent;
     border-left: 14px solid #ea580c;
     right: -7px;
   }
-  
+
   .transitionErrorContainer {
     padding: 24px;
   }
-  
+
   .transitionRetryButton {
     padding: 12px 24px;
     font-size: 0.9rem;
@@ -500,6 +533,7 @@
 
 /* 접근성 */
 @media (prefers-reduced-motion: reduce) {
+
   .transitionContainer,
   .transitionLogoMain,
   .transitionLogoAccent,
@@ -509,7 +543,7 @@
   .transitionDot {
     animation: none;
   }
-  
+
   .transitionGeometricShape {
     animation: none;
   }
@@ -520,16 +554,17 @@
   .transitionContainer {
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   }
-  
+
   .transitionLogoMain {
     color: #f1f5f9;
   }
-  
+
   .transitionStatusText {
     color: #94a3b8;
   }
-  
+
   .transitionCopyright {
     color: #64748b;
   }
 }
+

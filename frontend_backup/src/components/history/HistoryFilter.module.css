@@ -1,0 +1,174 @@
+/* components/history/HistoryFilter.module.css */
+
+/* 필터 섹션 */
+.filterSection {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.filterHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.filterToggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000000;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.filterToggle:hover {
+  background-color: #f3f4f6;
+}
+
+.filterIcon {
+  transition: transform 0.2s ease;
+}
+
+.filterIcon.open {
+  transform: rotate(90deg);
+}
+
+.resetButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resetButton:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.filterContent {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.filterContent.hidden {
+  display: none;
+}
+
+/* 필터 그룹 */
+.filterGroup {
+  position: relative;
+}
+
+.filterLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.filterDropdown {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.filterDropdown:hover {
+  border-color: #9ca3af;
+}
+
+.filterDropdown.active {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filterDropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+  margin-top: 4px;
+}
+
+.filterDropdownItem {
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: background-color 0.2s ease;
+}
+
+.filterDropdownItem:hover {
+  background-color: #f3f4f6;
+}
+
+.filterDropdownItem:first-child {
+  border-radius: 6px 6px 0 0;
+}
+
+.filterDropdownItem:last-child {
+  border-radius: 0 0 6px 6px;
+}
+
+/* 날짜 선택 컨테이너 */
+.datePickerContainer {
+  position: relative;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .filterContent {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .filterHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .filterContent {
+    grid-template-columns: 1fr;
+  }
+}

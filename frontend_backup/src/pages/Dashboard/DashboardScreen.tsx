@@ -1,107 +1,94 @@
-// Dashboard.tsx - 메인 대시보드 컴포넌트
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * 📊 DashboardScreen - 메인 대시보드 화면 컴포넌트
+ * ═══════════════════════════════════════════════════════════════
+ * 
+ * AWS IoT 환경 모니터링 시스템의 중심이 되는 대시보드 화면입니다.
+ * 실시간 센서 데이터, 알림, QuickSight 분석, 이상치 탐지 등을 통합 제공합니다.
+ * 
+ * 주요 기능:
+ * - 📈 실시간 센서 데이터 시각화 (온도, 습도, 가스)
+ * - 📋 현재 데이터 테이블 표시 (Mintrend 우선 데이터)
+ * - 📊 AWS QuickSight 대시보드 임베딩
+ * - 🔔 실시간 알림 시스템
+ * - 🚨 이상치 자동 감지 및 알림
+ * - 🕐 실시간 시간 표시
+ * - 👤 관리자 메뉴 (프로필, 로그아웃)
+ * - 🧭 사이드바 네비게이션
+ * 
+ * 데이터 소스:
+ * - 🔥 Mintrend API: S3에서 최신 센서 데이터 가져오기 (우선순위 1)
+ * - 📡 Dashboard API: 센서별 시계열 데이터 (우선순위 2)
+ * - ☁️ QuickSight API: AWS 분석 대시보드 임베딩 URL
+ * 
+ * 실시간 업데이트:
+ * - ⏱️ 30초마다 Mintrend 데이터 자동 갱신
+ * - 🔔 60초마다 이상치 체크 및 알림
+ * - 🕐 30초마다 현재 시간 업데이트
+ * 
+ * UI 구성:
+ * 왼쪽: 사이드바 (Dashboard, Chatbot, History, 로그아웃)
+ * 상단: 헤더 (페이지 제목, 시간, 알림, 관리자 메뉴)
+ * 중앙: 현재 데이터 테이블 + QuickSight 대시보드
+ * 우상단: 이상치 알림 팝업 (조건부 표시)
+ */
+
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Bell, User, ChevronDown, Info } from 'lucide-react';
-import { 
-  NotificationData, 
-  SensorData, 
-  SensorType, 
+import { Bell, User, ChevronDown, Info, ExternalLink, BarChart3 } from 'lucide-react';
+import {
+  NotificationData,
+  SensorData,
+  SensorType,
   SidebarItemProps,
   DashboardAPI,
   DashboardUtils,
   SENSOR_OPTIONS,
   MENU_ITEMS
 } from '../../services/DashboardTypes';
-import { 
-  MintrendService, 
-  MintrendResponse, 
-  MintrendData 
-} from '../../services/MintrendTypes';
-import styles from "./DashboardScreen.module.css";
+// 기존 (잘못된 import)
+// 수정 후 (올바른 import)
+import {
+  MintrendService
+} from './hooks/MintrendService';
 
+import {
+  MintrendResponse
+} from '../../services/MintrendTypes';
+import {
+  QuickSightService,
+  QuickSightDashboardResponse,
+  QuickSightSensorType,
+  QUICKSIGHT_SENSOR_OPTIONS
+} from './hooks/QuickSightTypes';
+import styles from "./DashboardScreen.module.css";
+import { Sidebar } from '../../components/common/Sidebar';
+import NotificationDropdown from '../../components/common/dropdown/NotificationDropdown';
+import AdminDropdown from '../../components/common/dropdown/AdminDropdown';
+import AnomalyAlert from './hooks/AnomalyAlert';
+
+/**
+ * 🔧 DashboardScreen 컴포넌트 Props 인터페이스
+ * 상위 AppRouter에서 전달받는 네비게이션 함수들을 정의
+ */
 interface DashboardScreenProps {
-  onNavigateToChatbot: () => void;
-  onNavigateToHistory: () => void;
-  onNavigateToRole?: () => void;
+  onNavigateToChatbot: () => void;   // 챗봇 화면으로 이동하는 콜백 함수
+  onNavigateToHistory: () => void;   // 히스토리 화면으로 이동하는 콜백 함수
+  onNavigateToRole?: () => void;     // 역할 선택(로그아웃) 화면으로 이동하는 콜백 함수 (선택적)
 }
 
-// 사이드바 아이템 컴포넌트
-const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`${styles.sidebarItem} ${isActive ? styles.sidebarItemActive : ''}`}
-  >
-    <span>{icon}</span>
-    <span>{label}</span>
-  </button>
-);
 
-// 알림 드롭다운 컴포넌트
-const NotificationDropdown: React.FC<{ 
-  isOpen: boolean; 
-  onClose: () => void; 
-  notifications: NotificationData['notifications'];
-}> = ({ isOpen, onClose, notifications }) => {
-  if (!isOpen) return null;
-
-  return (
-    <>
-      <div className={styles.dropdown}>
-        <div className={styles.dropdownHeader}>
-          <h3 className={styles.dropdownTitle}>알림</h3>
-        </div>
-        <div className={styles.notificationList}>
-          {notifications.length === 0 ? (
-            <div className={styles.emptyNotification}>
-              새로운 알림이 없습니다
-            </div>
-          ) : (
-            notifications.map((notification) => (
-              <div 
-                key={notification.id} 
-                className={`${styles.notificationItem} ${!notification.read ? styles.notificationItemUnread : ''}`}
-              >
-                <p className={styles.notificationMessage}>{notification.message}</p>
-                <p className={styles.notificationTimestamp}>{notification.timestamp}</p>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-      <button 
-        onClick={onClose}
-        className={styles.dropdownOverlay}
-        aria-label="알림 닫기"
-      />
-    </>
-  );
-};
-
-// 관리자 드롭다운 컴포넌트
-const AdminDropdown: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-
-  return (
-    <>
-      <div className={styles.adminDropdown}>
-        <div className={styles.adminDropdownContent}>
-          <button className={styles.adminDropdownItem}>프로필 설정</button>
-          <button className={styles.adminDropdownItem}>계정 관리</button>
-          <div className={styles.adminDropdownDivider} />
-          <button className={`${styles.adminDropdownItem} ${styles.adminDropdownLogout}`}>로그아웃</button>
-        </div>
-      </div>
-      <button 
-        onClick={onClose}
-        className={styles.dropdownOverlay}
-        aria-label="관리자 메뉴 닫기"
-      />
-    </>
-  );
-};
-
-// 센서 차트 컴포넌트
-const SensorChart: React.FC<{ 
+/**
+ * 📊 SensorChart - 센서 데이터 시각화 차트 컴포넌트
+ * 
+ * Recharts 라이브러리를 사용하여 센서 데이터를 시각화합니다.
+ * 센서 타입에 따라 LineChart(온도, 습도) 또는 AreaChart(가스)를 사용합니다.
+ * 
+ * @param sensorData - 표시할 센서 데이터 (라벨과 값 배열 포함)
+ * @param isLoading - 로딩 상태 (로딩 중 스피너 표시)
+ * @param error - 에러 메시지 (에러 발생 시 에러 화면 표시)
+ */
+const SensorChart: React.FC<{
   sensorData: SensorData | null;
   isLoading: boolean;
   error: string | null;
@@ -143,26 +130,30 @@ const SensorChart: React.FC<{
       <ResponsiveContainer width="100%" height="100%">
         {sensorData.sensorType === 'gas' ? (
           <AreaChart data={chartData}>
+            {/* 🗂️ 격자 배경 */}
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis 
-              dataKey="time" 
+            {/* 📅 X축: 시간 */}
+            <XAxis
+              dataKey="time"
               stroke="#666"
               fontSize={12}
             />
-            <YAxis 
+            {/* 📊 Y축: 센서 값 */}
+            <YAxis
               stroke="#666"
               fontSize={12}
             />
-            <Tooltip 
+            {/* 💬 마우스 호버 툴팡 */}
+            <Tooltip
               contentStyle={{
                 backgroundColor: 'white',
                 border: '1px solid #e5e7eb',
                 borderRadius: '6px'
               }}
             />
-            <Area 
-              type="monotone" 
-              dataKey="value" 
+            <Area
+              type="monotone"
+              dataKey="value"
               stroke={color}
               fill={color}
               fillOpacity={0.3}
@@ -171,26 +162,30 @@ const SensorChart: React.FC<{
           </AreaChart>
         ) : (
           <LineChart data={chartData}>
+            {/* 🗂️ 격자 배경 */}
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis 
-              dataKey="time" 
+            {/* 📅 X축: 시간 */}
+            <XAxis
+              dataKey="time"
               stroke="#666"
               fontSize={12}
             />
-            <YAxis 
+            {/* 📊 Y축: 센서 값 */}
+            <YAxis
               stroke="#666"
               fontSize={12}
             />
-            <Tooltip 
+            {/* 💬 마우스 호버 툴 */}
+            <Tooltip
               contentStyle={{
                 backgroundColor: 'white',
                 border: '1px solid #e5e7eb',
                 borderRadius: '6px'
               }}
             />
-            <Line 
-              type="monotone" 
-              dataKey="value" 
+            <Line
+              type="monotone"
+              dataKey="value"
               stroke={color}
               strokeWidth={2}
               dot={{ fill: color, strokeWidth: 2, r: 4 }}
@@ -203,7 +198,104 @@ const SensorChart: React.FC<{
   );
 };
 
-// 메인 대시보드 컴포넌트
+// 🆕 QuickSight 대시보드 컴포넌트
+const QuickSightDashboard: React.FC<{
+  dashboardData: QuickSightDashboardResponse | null;
+  isLoading: boolean;
+  error: string | null;
+  onRetry: () => void;
+}> = ({ dashboardData, isLoading, error, onRetry }) => {
+  if (isLoading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div>QuickSight 대시보드를 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.errorContainer}>
+        <div className={styles.errorTitle}>QuickSight 대시보드 로딩 실패</div>
+        <div className={styles.errorMessage}>{error}</div>
+        <button onClick={onRetry} className={styles.retryButton}>
+          다시 시도
+        </button>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className={styles.noDataState}>
+        <p>QuickSight 대시보드 데이터가 없습니다.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.quicksightContainer}>
+      <div className={styles.quicksightHeader}>
+        <h3 className={styles.quicksightTitle}>
+        </h3>
+      </div>
+
+      {dashboardData.embedUrl ? (
+        <div className={styles.quicksightIframe}>
+          {dashboardData?.embedUrl && /\/embed\//.test(dashboardData.embedUrl) ? (
+            <iframe
+              src={dashboardData.embedUrl}
+              width="100%"
+              height="600"
+              frameBorder="0"
+              title={`QuickSight Dashboard - ${dashboardData.dashboard?.name ?? 'QuickSight'}`}
+              allow="fullscreen"
+            />
+          ) : (
+            <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
+              <strong>임베드 URL이 아니라서 표시할 수 없어요.</strong>
+              <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+                백엔드가 <code>/embed/</code> 경로의 URL을 반환해야 iframe으로 표시 가능합니다.
+              </div>
+              {dashboardData?.embedUrl && (
+                <div style={{ marginTop: 6, wordBreak: 'break-all', fontSize: 12, opacity: 0.7 }}>
+                  현재 URL: <code>{dashboardData.embedUrl}</code>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+      ) : (
+        <div className={styles.quicksightPlaceholder}>
+          <BarChart3 size={48} />
+          <h4>QuickSight 대시보드</h4>
+          <p>임베드 URL을 생성하는 중입니다...</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
+ * 📊 DashboardScreen - 메인 대시보드 컴포넌트
+ * 
+ * AWS IoT 모니터링 시스템의 중심 화면입니다.
+ * 실시간 센서 데이터 모니터링, 알림 관리, QuickSight 분석 등을 제공합니다.
+ * 
+ * 상태 관리:
+ * - 🧭 activeMenu: 현재 활성 메뉴 (사이드바 하이라이트)
+ * - 🔔 notificationData: 알림 목록 및 개수
+ * - 📊 sensorData: 현재 선택된 센서의 차트 데이터
+ * - 📋 allSensorData: 모든 센서의 현재값 (테이블 표시용)
+ * - 🔥 mintrendData: S3에서 가져온 최신 센서 데이터 (우선 표시)
+ * - ☁️ quickSightData: AWS QuickSight 대시보드 임베딩 데이터
+ * 
+ * 자동 업데이트:
+ * - 30초마다 Mintrend 데이터 갱신
+ * - 실시간 시간 표시 업데이트
+ * - 60초마다 이상치 감지 및 알림
+ */
 const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onNavigateToChatbot,
   onNavigateToHistory,
@@ -221,84 +313,64 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [allSensorData, setAllSensorData] = useState<Record<SensorType, SensorData | null>>({
-  temperature: null,
-  humidity: null,
-  gas: null,
-});
-  
+    temperature: null,
+    humidity: null,
+    gas: null,
+  });
+
   // Mintrend 데이터 관련 state
   const [mintrendData, setMintrendData] = useState<MintrendResponse | null>(null);
   const [mintrendLoading, setMintrendLoading] = useState(false);
   const [mintrendError, setMintrendError] = useState<string | null>(null);
 
-  // 센서 데이터 가져오기
-  const fetchSensorData = async (sensorType: SensorType) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const data = await DashboardAPI.getSensorData(sensorType);
-      
-      if (data.success) {
-        setSensorData(data as SensorData);
-        setAllSensorData(prev => ({
-          ...prev,
-          [sensorType]: data as SensorData
-        }));
-      } else {
-        setError('데이터를 불러올 수 없습니다.');
-      }
-    } catch (err) {
-      setError('데이터를 가져오는 중 오류가 발생했습니다.');
-      console.error('센서 데이터 가져오기 실패:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // 🆕 QuickSight 관련 state 추가
+  const [selectedQuickSightSensor, setSelectedQuickSightSensor] = useState<QuickSightSensorType>('TEMPERATURE');
+  const [quickSightData, setQuickSightData] = useState<QuickSightDashboardResponse | null>(null);
+  const [quickSightLoading, setQuickSightLoading] = useState(false);
+  const [quickSightError, setQuickSightError] = useState<string | null>(null);
 
-  // Mintrend 데이터 가져오기
-  const fetchMintrendData = async () => {
-    setMintrendLoading(true);
-    setMintrendError(null);
-    
-    try {
-      const data = await MintrendService.getLatestMintrendData();
-      setMintrendData(data);
-      console.log('✅ Mintrend 데이터 로드 성공:', data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Mintrend 데이터를 가져오는 중 오류가 발생했습니다.';
-      setMintrendError(errorMessage);
-      console.error('❌ Mintrend 데이터 로드 실패:', err);
-    } finally {
-      setMintrendLoading(false);
-    }
-  };
+  // DashboardScreen.tsx에서
+const fetchMintrendData = async () => {
+  setMintrendLoading(true);
+  setMintrendError(null);
 
-  // ✅ REPLACE 전체 함수
-const fetchAllSensorData = async () => {
   try {
-    const results = await Promise.all(
-      SENSOR_OPTIONS.map(opt => DashboardAPI.getSensorData(opt.value as SensorType))
-    );
-
-    const newAllSensorData: Record<SensorType, SensorData | null> = {
-      temperature: null,
-      humidity: null,
-      gas: null,
-    };
-
-    results.forEach((result, index) => {
-      if (result.success) {
-        const sensorType = SENSOR_OPTIONS[index].value as SensorType;
-        newAllSensorData[sensorType] = result as SensorData;
-      }
-    });
-
-    setAllSensorData(newAllSensorData);
-  } catch (err) {
-    console.error('전체 센서 데이터 가져오기 실패:', err);
+    const data = await MintrendService.getLatestMintrendData();
+    setMintrendData(data);
+  } catch (error) {
+    console.error('Mintrend 데이터 로드 실패:', error);
+    setMintrendError('API 호출에 실패했습니다.');
+  } finally {
+    setMintrendLoading(false);
   }
 };
+
+  /**
+   * 📊 QuickSight 대시보드 데이터 가져오기 함수
+   * 
+   * AWS QuickSight에서 센서 타입별 대시보드 임베딩 URL을 요청합니다.
+   * 백엔드에서 인증된 QuickSight 세션을 통해 임베딩 URL을 생성합니다.
+   * 
+   * @param sensorType - QuickSight 대시보드 센서 타입 ('TEMPERATURE' | 'HUMIDITY' | 'GAS')
+   */
+  const fetchQuickSightData = async (sensorType: QuickSightSensorType) => {
+    setQuickSightLoading(true);  // 📥 QuickSight 로딩 시작
+    setQuickSightError(null);    // 🧹 이전 에러 초기화
+
+    try {
+      // 📞 QuickSight 서비스 호출
+      const data = await QuickSightService.getDashboardByType(sensorType);
+      setQuickSightData(data);  // ✅ 데이터 상태 업데이트
+      console.log('✅ QuickSight 대시보드 로드 성공:', data);
+    } catch (err) {
+      // ❌ QuickSight 에러 처리
+      const errorMessage = err instanceof Error ? err.message : 'QuickSight 대시보드를 가져오는 중 오류가 발생했습니다.';
+      setQuickSightError(errorMessage);
+      console.error('❌ QuickSight 대시보드 로드 실패:', err);
+    } finally {
+      setQuickSightLoading(false);  // 🏁 QuickSight 로딩 종료
+    }
+  };
 
   // 알림 데이터 가져오기
   const fetchNotifications = async () => {
@@ -313,46 +385,54 @@ const fetchAllSensorData = async () => {
   // 메뉴 클릭 핸들러
   const handleMenuClick = (label: string, path: string) => {
     setActiveMenu(label);
-    
+
     switch (label) {
-    case 'Chatbot':
-      onNavigateToChatbot();
-      break;
-    case 'History':
-      onNavigateToHistory();
-      break;
-    case 'Dashboard':
-      // 대시보드면 현재 화면 유지
-      break;
-    case 'Logout':
-      onNavigateToRole?.();  // 역할 선택 화면으로
-      break;
-    default:
-      break;
-  }
-};
+      case 'Chatbot':
+        onNavigateToChatbot();
+        break;
+      case 'History':
+        onNavigateToHistory();
+        break;
+      case 'Dashboard':
+        // 대시보드면 현재 화면 유지
+        break;
+      case 'Logout':
+        onNavigateToRole?.();  // 역할 선택 화면으로
+        break;
+      default:
+        break;
+    }
+  };
 
   // 센서 선택 핸들러
   const handleSensorSelect = (sensorType: SensorType) => {
     setSelectedSensor(sensorType);
-    fetchSensorData(sensorType);
+    // fetchSensorData(sensorType);
+  };
+
+  // 🆕 QuickSight 센서 선택 핸들러
+  const handleQuickSightSensorSelect = (sensorType: QuickSightSensorType) => {
+    setSelectedQuickSightSensor(sensorType);
+    fetchQuickSightData(sensorType);
   };
 
   // 컴포넌트 마운트 시 초기 데이터 로딩
   useEffect(() => {
     fetchNotifications();
-    fetchSensorData('temperature'); // 기본값
-    fetchAllSensorData(); // 테이블용 전체 데이터
+    // fetchSensorData('temperature'); // 기본값
+    // fetchAllSensorData(); // 테이블용 전체 데이터
     fetchMintrendData(); // Mintrend 데이터 가져오기
-    
+    fetchQuickSightData('TEMPERATURE'); // 🆕 QuickSight 데이터 가져오기
+
     // 주기적으로 데이터 업데이트 (30초마다)
     const interval = setInterval(() => {
-      fetchNotifications();
-      fetchSensorData(selectedSensor);
-      fetchAllSensorData();
+      // fetchNotifications();
+      // fetchSensorData(selectedSensor);
+      // fetchAllSensorData();
       fetchMintrendData(); // Mintrend 데이터도 주기적으로 업데이트
+      // QuickSight는 주기적으로 업데이트 안함 (임베드 URL 캐싱 때문)
     }, 30000);
-    
+
     return () => clearInterval(interval);
   }, [selectedSensor]);
 
@@ -365,35 +445,23 @@ const fetchAllSensorData = async () => {
 
   // 실시간 시간 업데이트를 위한 useEffect 추가
   const [currentTime, setCurrentTime] = useState(DashboardUtils.getCurrentDateTime());
-  
+
   useEffect(() => {
     const timeInterval = setInterval(() => {
       setCurrentTime(DashboardUtils.getCurrentDateTime());
-    }, 60000); // 1분마다 업데이트
-    
+    }, 30000); // 30초마다 업데이트
+
     return () => clearInterval(timeInterval);
   }, []);
 
   return (
     <div className={styles.dashboardContainer}>
       {/* 사이드바 */}
-      <nav className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <h2 className={styles.sidebarTitle}>AWS IOT</h2>
-        </div>
+      <Sidebar
+        activeMenu={activeMenu}
+        onMenuClick={handleMenuClick}
+      />
 
-        <div className={styles.sidebarMenu}>
-          {MENU_ITEMS.map((item) => (
-            <SidebarItem
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeMenu === item.label}
-              onClick={() => handleMenuClick(item.label, item.path)}
-            />
-          ))}
-        </div>
-      </nav>
 
       {/* 메인 컨텐츠 영역 */}
       <main className={styles.mainContent}>
@@ -403,7 +471,7 @@ const fetchAllSensorData = async () => {
             <h1 className={styles.pageTitle}>{activeMenu}</h1>
             <p className={styles.pageSubtitle}>{currentTime}</p>
           </div>
-          
+
           <div className={styles.headerRight}>
             {/* 알림 아이콘 */}
             <div className={styles.headerItem}>
@@ -422,7 +490,7 @@ const fetchAllSensorData = async () => {
                   </span>
                 )}
               </button>
-              
+
               <NotificationDropdown
                 isOpen={isNotificationOpen}
                 onClose={() => setIsNotificationOpen(false)}
@@ -444,7 +512,7 @@ const fetchAllSensorData = async () => {
                 <span>관리자</span>
                 <ChevronDown size={16} />
               </button>
-              
+
               <AdminDropdown
                 isOpen={isAdminMenuOpen}
                 onClose={() => setIsAdminMenuOpen(false)}
@@ -458,44 +526,16 @@ const fetchAllSensorData = async () => {
           {activeMenu === 'Dashboard' ? (
             <>
               {/* 시간평균 데이터 차트 섹션 */}
-              <section className={styles.chartSection}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>TIME-AVERAGED DATA</h2>
-                  
-                  {/* 센서 선택 드롭다운 */}
-                  <div className={styles.sensorSelector}>
-                    <select
-                      value={selectedSensor}
-                      onChange={(e) => handleSensorSelect(e.target.value as SensorType)}
-                      className={styles.sensorSelect}
-                    >
-                      {SENSOR_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className={styles.chartCard}>
-                  <SensorChart 
-                    sensorData={sensorData}
-                    isLoading={isLoading}
-                    error={error}
-                  />
-                </div>
-              </section>
-
-              {/* 현재 & 예측 데이터 테이블 섹션 */}
               <section className={styles.summarySection}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>CURRENT &amp; PREDICTION DATA</h2>
-                  <div className={styles.infoIcon}>
-                    <Info size={16} />
+                <div className={styles.sectionTitleRow}>
+                  <div className={styles.sectionHeader}>
+                    <h2 className={styles.sectionTitle}>CURRENT DATA</h2>
+                    <div className={styles.infoIcon}>
+                      <Info size={16} />
+                    </div>
                   </div>
                 </div>
-                
+
                 <div className={styles.summaryCard}>
                   <table className={styles.summaryTable}>
                     <thead>
@@ -503,65 +543,90 @@ const fetchAllSensorData = async () => {
                         <th>TIME</th>
                         <th>TEMPERATURE</th>
                         <th>HUMIDITY</th>
-                        <th>GAS CONCENTRATION</th>
+                        <th>CO₂ CONCENTRATION</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {/* 현재 데이터 행 */}
                       <tr>
-                        <td>CURRENT DATA</td>
                         <td>
-                          {allSensorData.temperature ? (
-                            <span className={DashboardUtils.getStatusClass(allSensorData.temperature.current.status)}>
-                              {allSensorData.temperature.current.value.toFixed(1)}{allSensorData.temperature.unit}
-                            </span>
-                          ) : (
-                            <span>로딩 중...</span>
-                          )}
+                          {(() => {
+                            // 1순위: mintrendData 타임스탬프
+                            if (mintrendData?.data?.timestamp) {
+                              return new Date(mintrendData.data.timestamp).toLocaleString('ko-KR', { hour12: false });
+                            }
+                            // 2순위: allSensorData 타임스탬프
+                            const ts =
+                              allSensorData.temperature?.timestamp ||
+                              allSensorData.humidity?.timestamp ||
+                              allSensorData.gas?.timestamp;
+                            return ts ? new Date(ts).toLocaleString('ko-KR', { hour12: false }) : '-';
+                          })()}
                         </td>
+
                         <td>
-                          {allSensorData.humidity ? (
-                            <span className={DashboardUtils.getStatusClass(allSensorData.humidity.current.status)}>
-                              {allSensorData.humidity.current.value.toFixed(1)}{allSensorData.humidity.unit}
-                            </span>
-                          ) : (
-                            <span>로딩 중...</span>
-                          )}
+                          {(() => {
+                            // 온도: 1순위 mintrendData, 2순위 allSensorData
+                            if (mintrendData?.data?.mintemp !== undefined) {
+                              const tempStatus = MintrendService.getTemperatureStatus(mintrendData.data.mintemp);
+                              return (
+                                <span className={MintrendService.getStatusColorClass(tempStatus)}>
+                                  {mintrendData.data.mintemp.toFixed(2)}°C
+                                </span>
+                              );
+                            }
+                            if (allSensorData.temperature) {
+                              return (
+                                <span className={DashboardUtils.getStatusClass(allSensorData.temperature.current.status)}>
+                                  {allSensorData.temperature.current.value.toFixed(2)}{allSensorData.temperature.unit}
+                                </span>
+                              );
+                            }
+                            return <span>로딩 중...</span>;
+                          })()}
                         </td>
+
                         <td>
-                          {allSensorData.gas ? (
-                            <span className={DashboardUtils.getStatusClass(allSensorData.gas.current.status)}>
-                              {allSensorData.gas.current.value.toFixed(0)}{allSensorData.gas.unit}
-                            </span>
-                          ) : (
-                            <span>로딩 중...</span>
-                          )}
+                          {(() => {
+                            // 습도: 1순위 mintrendData, 2순위 allSensorData
+                            if (mintrendData?.data?.minhum !== undefined) {
+                              const humStatus = MintrendService.getHumidityStatus(mintrendData.data.minhum);
+                              return (
+                                <span className={MintrendService.getStatusColorClass(humStatus)}>
+                                  {mintrendData.data.minhum.toFixed(2)}%
+                                </span>
+                              );
+                            }
+                            if (allSensorData.humidity) {
+                              return (
+                                <span className={DashboardUtils.getStatusClass(allSensorData.humidity.current.status)}>
+                                  {allSensorData.humidity.current.value.toFixed(2)}{allSensorData.humidity.unit}
+                                </span>
+                              );
+                            }
+                            return <span>로딩 중...</span>;
+                          })()}
                         </td>
-                      </tr>
-                      
-                      {/* 예측 데이터 행 */}
-                      <tr>
-                        <td>PREDICTION DATA</td>
+
                         <td>
-                          {allSensorData.temperature ? (
-                            <span>{allSensorData.temperature.prediction.value.toFixed(1)}{allSensorData.temperature.unit}</span>
-                          ) : (
-                            <span>로딩 중...</span>
-                          )}
-                        </td>
-                        <td>
-                          {allSensorData.humidity ? (
-                            <span>{allSensorData.humidity.prediction.value.toFixed(1)}{allSensorData.humidity.unit}</span>
-                          ) : (
-                            <span>로딩 중...</span>
-                          )}
-                        </td>
-                        <td>
-                          {allSensorData.gas ? (
-                            <span>{allSensorData.gas.prediction.value.toFixed(0)}{allSensorData.gas.unit}</span>
-                          ) : (
-                            <span>로딩 중...</span>
-                          )}
+                          {(() => {
+                            // 가스: 1순위 mintrendData, 2순위 allSensorData
+                            if (mintrendData?.data?.mingas !== undefined) {
+                              const gasStatus = MintrendService.getGasStatus(mintrendData.data.mingas);
+                              return (
+                                <span className={MintrendService.getStatusColorClass(gasStatus)}>
+                                  {mintrendData.data.mingas.toFixed(2)}ppm
+                                </span>
+                              );
+                            }
+                            if (allSensorData.gas) {
+                              return (
+                                <span className={DashboardUtils.getStatusClass(allSensorData.gas.current.status)}>
+                                  {allSensorData.gas.current.value.toFixed(2)}{allSensorData.gas.unit}
+                                </span>
+                              );
+                            }
+                            return <span>로딩 중...</span>;
+                          })()}
                         </td>
                       </tr>
                     </tbody>
@@ -569,76 +634,39 @@ const fetchAllSensorData = async () => {
                 </div>
               </section>
 
-              {/* Mintrend 최신 데이터 섹션 */}
-              <section className={styles.mintrendSection}>
+              {/* 현재 & 예측 데이터 테이블 섹션 */}
+
+
+              {/* 🆕 QuickSight 대시보드 섹션 */}
+              <section className={styles.quicksightSection}>
                 <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>LATEST MINTREND DATA</h2>
-                  <div className={styles.infoIcon}>
-                    <Info size={16} />
+                  <div className={styles.sectionTitleRow}>
+                    <h2 className={styles.sectionTitle}>QUICKSIGHT ANALYTICS DASHBOARD</h2>
+
+                    {/* QuickSight 센서 선택 드롭다운 */}
+                    <div className={styles.sensorSelector}>
+                      <select
+                        value={selectedQuickSightSensor}
+                        onChange={(e) => handleQuickSightSensorSelect(e.target.value as QuickSightSensorType)}
+                        className={styles.sensorSelect}
+                      >
+                        {QUICKSIGHT_SENSOR_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
-                
-                <div className={styles.mintrendCard}>
-                  {mintrendLoading ? (
-                    <div className={styles.loadingState}>
-                      <p>Mintrend 데이터를 불러오는 중...</p>
-                    </div>
-                  ) : mintrendError ? (
-                    <div className={styles.errorState}>
-                      <p>❌ 오류: {mintrendError}</p>
-                      <button 
-                        onClick={fetchMintrendData}
-                        className={styles.retryButton}
-                      >
-                        다시 시도
-                      </button>
-                    </div>
-                  ) : mintrendData ? (
-                    <div className={styles.mintrendContent}>
-                      <div className={styles.mintrendHeader}>
-                        <h3 className={styles.mintrendFilename}>📄 {mintrendData.filename}</h3>
-                        <p className={styles.mintrendTimestamp}>
-                          {new Date(mintrendData.data.timestamp).toLocaleString('ko-KR')}
-                        </p>
-                      </div>
-                      
-                      <div className={styles.mintrendGrid}>
-                        <div className={styles.mintrendItem}>
-                          <span className={styles.mintrendLabel}>최소 온도</span>
-                          <span className={`${styles.mintrendValue} ${styles.temperature}`}>
-                            {mintrendData.data.mintemp.toFixed(2)}°C
-                          </span>
-                          <span className={styles.mintrendStatus}>
-                            {MintrendService.getTemperatureStatus(mintrendData.data.mintemp)}
-                          </span>
-                        </div>
-                        
-                        <div className={styles.mintrendItem}>
-                          <span className={styles.mintrendLabel}>최소 습도</span>
-                          <span className={`${styles.mintrendValue} ${styles.humidity}`}>
-                            {mintrendData.data.minhum.toFixed(1)}%
-                          </span>
-                          <span className={styles.mintrendStatus}>
-                            {MintrendService.getHumidityStatus(mintrendData.data.minhum)}
-                          </span>
-                        </div>
-                        
-                        <div className={styles.mintrendItem}>
-                          <span className={styles.mintrendLabel}>최소 가스</span>
-                          <span className={`${styles.mintrendValue} ${styles.gas}`}>
-                            {mintrendData.data.mingas.toFixed(2)}
-                          </span>
-                          <span className={styles.mintrendStatus}>
-                            -
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className={styles.noDataState}>
-                      <p>Mintrend 데이터가 없습니다.</p>
-                    </div>
-                  )}
+
+                <div className={styles.quicksightCard}>
+                  <QuickSightDashboard
+                    dashboardData={quickSightData}
+                    isLoading={quickSightLoading}
+                    error={quickSightError}
+                    onRetry={() => fetchQuickSightData(selectedQuickSightSensor)}
+                  />
                 </div>
               </section>
             </>
@@ -657,8 +685,31 @@ const fetchAllSensorData = async () => {
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </main >
+
+      {/* 🚨 이상치 알림 컴포넌트 추가 - 화면 우상단에 팝업으로 표시 */}
+      < AnomalyAlert
+        interval={60000}        // 60초마다 체크
+        autoHideDelay={60000}   // 60초 표시
+        s3ApiEndpoint="/s3/file/last/mintrend"  // 기존 S3 API 사용
+        enabled={activeMenu === 'Dashboard'}    // 대시보드 화면에서만 활성화
+        maxAlerts={3}           // 최대 3개까지만 표시
+        thresholds={{           // 커스텀 임계값 (선택사항)
+          temperature: {
+            warningMax: 28,     // 28도 이상 경고
+            dangerMax: 32,      // 32도 이상 위험
+          },
+          humidity: {
+            warningMax: 75,     // 75% 이상 경고
+            dangerMax: 85,      // 85% 이상 위험
+          },
+          gas: {
+            warningMax: 800,    // 800ppm 이상 경고
+            dangerMax: 1200,    // 1200ppm 이상 위험
+          }
+        }}
+      />
+    </div >
   );
 };
 

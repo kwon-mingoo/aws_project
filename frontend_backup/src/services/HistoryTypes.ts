@@ -1,31 +1,8 @@
-// HistoryTypes.ts - 히스토리 타입 정의
-
-export interface HistoryEvent {
-  eventId: string;
-  timestamp: string;
-  sensorType: 'Temperature' | 'Humidity' | 'CO Concentration';
-  value: number;
-  status: 'GOOD' | 'NORMAL' | 'WARNING';
-}
-
-export interface HistoryRequest {
-  date?: string; // YYYY-MM-DD
-  sensorType?: 'Temperature' | 'Humidity' | 'CO Concentration';
-  status?: 'GOOD' | 'NORMAL' | 'WARNING';
-  page?: number;
-}
-
-export interface HistoryResponse {
-  success: true;
-  totalPages: number;
-  currentPage: number;
-  data: HistoryEvent[];
-}
-
-export interface HistoryError {
-  success: false;
-  error: string;
-}
+// HistoryTypes.ts
+// ============================================
+// 🎯 기본 타입 정의
+// ============================================
+import React from 'react';
 
 export interface HistoryFilters {
   date: string | null;
@@ -34,202 +11,310 @@ export interface HistoryFilters {
 }
 
 export interface HistoryState {
-  events: HistoryEvent[];
   isLoading: boolean;
   error: string | null;
-  filters: HistoryFilters;
-  currentPage: number;
-  totalPages: number;
   showFilters: boolean;
   showDatePicker: boolean;
   selectedDate: Date | null;
+  filters: HistoryFilters;
+  events: any[];
+  totalPages: number;
+  currentPage: number;
 }
 
-export interface SidebarItemProps {
-  icon: React.ReactNode;
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}
-
-// 원시 센서 데이터 형태
-export interface RawSensorData {
+export interface HistoryEvent {
+  id: string;
   timestamp: string;
-  temp: number;
-  hum: number;
-  gas: number;
+  sensorType: string;
+  value: number;
+  status: string;
+  location?: string;
 }
 
-export interface RawDataResponse {
-  [filename: string]: RawSensorData[];
+// ============================================
+// 📅 Calendar 관련 타입들
+// ============================================
+
+// ✅ 달력 DayCell 타입: date 필수
+export interface DayCell {
+  date: Date;
+  isCurrentMonth: boolean;
 }
 
-// 히스토리 API 클래스
+// ✅ 달력 Props: onCheckNow는 옵션(HistoryFilter에서 넘김)
+export interface CalendarProps {
+  selectedDate: Date;
+  onDateSelect: (date: Date) => void;
+  onClose: () => void;
+  onCheckNow?: () => void;
+}
+
+// ✅ 히스토리 화면 상태 (없으면 최소 정의)
+export interface HistoryItem {
+  // 필요한 필드만 우선 정의 (사용 중인 것만)
+  // id?: string;
+  // timestamp?: string;
+  // ...
+  [key: string]: any;
+}
+
+export interface HistoryState {
+  isLoading: boolean;
+  error: string | null;
+  showFilters: boolean;
+  showDatePicker: boolean;
+  selectedDate: Date | null;
+  filters: HistoryFilters;
+  events: any[];
+  totalPages: number;
+  currentPage: number;
+
+  // ✅ 이 4줄만 추가
+  items?: any[];
+  page?: number;
+  pageSize?: number;
+  total?: number;
+}
+
+// ✅ 테이블 Props: 에러에 나온 두 필드 명시
+export interface HistoryTableProps {
+  historyState: HistoryState;
+  changePage: (nextPage: number) => void;
+}
+
+
+// ============================================
+// 🖥️ Screen 관련 타입들
+// ============================================
+
+export interface HistoryScreenProps {
+  onNavigateBack?: () => void;
+  onNavigateToChatbot: () => void;
+  onNavigateToHistory: () => void;
+  onNavigateToRole?: () => void;
+  onNavigateToDashboard: () => void;
+  activeMenu: string;
+  setActiveMenu: (menu: string) => void;
+}
+
+export interface NotificationData {
+  count: number;
+  notifications: any[];
+}
+
+// ✅ 이 부분이 없으면 추가
+export interface HistoryFilterProps {
+  historyState: HistoryState;
+  activeDropdown: string | null;
+  setActiveDropdown: (dropdown: string | null) => void;
+  updateFilter: (key: keyof HistoryFilters, value: string | null) => void;
+  resetFilters: () => void;
+  handleDateSelect: (date: Date) => void;
+  applyFilters: () => void;
+  toggleFilters: () => void;
+}
+
+// ============================================
+// 🌐 API 클래스
+// ============================================
+
 export class HistoryAPI {
-  private static readonly BASE_URL = '/api/s3/date';
+  private static readonly BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-  // 기본 히스토리 데이터 가져오기
-  static async getHistoryData(params: HistoryRequest = {}): Promise<HistoryResponse | HistoryError> {
+  // 🔧 실제 API 호출 (기존 코드와 호환성 유지)
+  static async fetchEvents(filters: HistoryFilters, page: number = 1): Promise<{
+    events: HistoryEvent[];
+    totalPages: number;
+  }> {
     try {
-      const queryParams = new URLSearchParams();
-      
-      if (params.date) queryParams.append('date', params.date);
-      if (params.sensorType) queryParams.append('sensorType', params.sensorType);
-      if (params.status) queryParams.append('status', params.status);
-      if (params.page) queryParams.append('page', params.page.toString());
+      const targetDate = filters.date || HistoryUtils.formatDateToString(new Date());
 
-      const url = params.date 
-        ? `${this.BASE_URL}/${params.date.replace(/-/g, '')}?${queryParams.toString()}`
-        : `${this.BASE_URL}?${queryParams.toString()}`;
+      console.log('🔄 HistoryAPI.fetchEvents 호출:', { filters, page, targetDate });
 
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${this.getAuthToken()}`
-        }
-      });
+      const formattedDate = targetDate.replace(/-/g, '');
+      const apiKey =
+  process.env.REACT_APP_ADMIN_API_KEY ||
+  process.env.REACT_APP_API_KEY ||
+  '';
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+const response = await fetch(`${this.BASE_URL}/s3/history/${formattedDate}`, {
+  method: 'GET',
+  headers: {
+    'x-api-key': apiKey,        // ✅ 이것만!
+  },
+});
+
+      if (response.status === 404) {
+        return { events: [], totalPages: 1 };
       }
 
-      return await response.json();
-    } catch (error) {
-      console.error('히스토리 API 오류:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : '데이터를 조회할 수 없습니다.'
-      };
-    }
-  }
-
-  // 특정 날짜의 원시 데이터 가져오기
-  static async getRawData(date: string): Promise<RawDataResponse | HistoryError> {
-    try {
-      const formattedDate = date.replace(/-/g, ''); // YYYYMMDD 형식으로 변환
-      const response = await fetch(`${this.BASE_URL}/${formattedDate}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${this.getAuthToken()}`
-        }
-      });
-
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
-    } catch (error) {
-      console.error('원시 데이터 API 오류:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : '원시 데이터를 조회할 수 없습니다.'
-      };
-    }
-  }
+      const data = await response.json();
 
-  // 인증 토큰 가져오기
-  private static getAuthToken(): string {
-    return localStorage.getItem('auth_token') || 'demo_token';
-  }
+      let events: HistoryEvent[] = [];
 
-  // 개발용 목 데이터 생성
-  static generateMockHistoryData(filters: HistoryFilters, page: number = 1): Promise<HistoryResponse> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const baseEvents: HistoryEvent[] = [
-          {
-            eventId: '00001',
-            timestamp: '2025-08-04T10:03:22Z',
-            sensorType: 'Temperature',
-            value: 25.5,
-            status: 'GOOD'
-          },
-          {
-            eventId: '00002',
-            timestamp: '2025-08-04T10:03:22Z',
-            sensorType: 'Humidity',
-            value: 60.1,
-            status: 'NORMAL'
-          },
-          {
-            eventId: '00003',
-            timestamp: '2025-08-04T10:03:22Z',
-            sensorType: 'CO Concentration',
-            value: 675,
-            status: 'WARNING'
-          },
-          {
-            eventId: '00004',
-            timestamp: '2025-08-04T10:03:22Z',
-            sensorType: 'Temperature',
-            value: 25.5,
-            status: 'GOOD'
-          },
-          {
-            eventId: '00005',
-            timestamp: '2025-08-04T10:03:22Z',
-            sensorType: 'Humidity',
-            value: 60.1,
-            status: 'NORMAL'
-          },
-          {
-            eventId: '00006',
-            timestamp: '2025-08-04T10:03:22Z',
-            sensorType: 'CO Concentration',
-            value: 671,
-            status: 'GOOD'
+      if (data.files && Array.isArray(data.files)) {
+        data.files.forEach((file: any, index: number) => {
+          const fileData = file.data;
+          if (fileData) {
+            events.push({
+              id: `${index}-temp`,
+              timestamp: fileData.timestamp,
+              sensorType: 'TEMP',
+              value: fileData.mintemp,
+              status: (fileData.mintemp_status || 'normal').toUpperCase()
+            });
+
+            events.push({
+              id: `${index}-humi`,
+              timestamp: fileData.timestamp,
+              sensorType: 'HUMI',
+              value: fileData.minhum,
+              status: (fileData.minhum_status || 'normal').toUpperCase()
+            });
+
+            events.push({
+              id: `${index}-gas`,
+              timestamp: fileData.timestamp,
+              sensorType: 'GAS',
+              value: fileData.mingas,
+              status: (fileData.mingas_status || 'normal').toUpperCase()
+            });
           }
-        ];
-
-        // 필터 적용
-        let filteredEvents = baseEvents;
-
-        if (filters.sensorType) {
-          filteredEvents = filteredEvents.filter(event => 
-            event.sensorType === filters.sensorType
-          );
-        }
-
-        if (filters.status) {
-          filteredEvents = filteredEvents.filter(event => 
-            event.status === filters.status
-          );
-        }
-
-        // 페이지네이션 적용 (페이지당 9개)
-        const pageSize = 9;
-        const totalPages = Math.ceil(filteredEvents.length / pageSize);
-        const startIndex = (page - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
-
-        resolve({
-          success: true,
-          totalPages,
-          currentPage: page,
-          data: paginatedEvents
         });
-      }, 500 + Math.random() * 500); // 0.5-1초 지연
-    });
+      }
+
+      // 필터 적용
+// 필터 적용
+if (filters.sensorType) {
+  // 드롭다운 선택값을 실제 데이터 값으로 변환
+  const sensorTypeMapping: Record<string, string> = {
+    'Temperature': 'TEMP',
+    'Humidity': 'HUMI',
+    'Gas Concentration': 'GAS',
+    'CO₂ Concentration': 'GAS'
+  };
+  
+  const actualSensorType = sensorTypeMapping[filters.sensorType] || filters.sensorType;
+  events = events.filter(event => event.sensorType === actualSensorType);
+}
+
+      if (filters.status) {
+        events = events.filter(event => event.status.toUpperCase() === filters.status.toUpperCase());
+      }
+
+      // 정렬 (최신순)
+      events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      // ✅ 수정: 페이징 제거하고 모든 데이터 반환
+      console.log('✅ HistoryAPI.fetchEvents 완료:', {
+        totalEvents: events.length,
+        returnedCount: events.length // 모든 데이터 반환
+      });
+
+      return {
+        events: events, // 모든 이벤트 반환
+        totalPages: 1   // 페이지는 1개만
+      };
+
+    } catch (error) {
+      console.error('❌ HistoryAPI.fetchEvents 실패:', error);
+
+      if (error instanceof TypeError || (error as any)?.code === 'ECONNREFUSED') {
+        console.log('🔄 네트워크 오류 - 더미 데이터로 대체');
+        return this.generateMockEvents(filters, page);
+      }
+
+      throw error;
+    }
+  }
+
+  // 더미 데이터 생성
+  private static generateMockEvents(filters: HistoryFilters, page: number): {
+    events: HistoryEvent[];
+    totalPages: number;
+  } {
+    const mockEvents: HistoryEvent[] = [];
+
+    // 오늘부터 7일간 더미 데이터 생성
+    for (let day = 0; day < 7; day++) {
+      for (let hour = 9; hour <= 17; hour++) {
+        for (let minute = 0; minute < 60; minute += 10) {
+          const date = new Date();
+          date.setDate(date.getDate() - day);
+          date.setHours(hour, minute, 0, 0);
+
+          const timestamp = date.toISOString();
+          const index = day * 100 + hour * 10 + minute;
+
+          mockEvents.push({
+            id: `${index}-temp`,
+            timestamp,
+            sensorType: 'TEMP',
+            value: 20 + Math.random() * 10,
+            status: ['GOOD', 'NORMAL', 'WARNING'][Math.floor(Math.random() * 3)]
+          });
+
+          mockEvents.push({
+            id: `${index}-humi`,
+            timestamp,
+            sensorType: 'HUMI',
+            value: 50 + Math.random() * 20,
+            status: ['GOOD', 'NORMAL', 'WARNING'][Math.floor(Math.random() * 3)]
+          });
+
+          mockEvents.push({
+            id: `${index}-gas`,
+            timestamp,
+            sensorType: 'GAS',
+            value: 500 + Math.random() * 1000,
+            status: ['GOOD', 'NORMAL', 'WARNING'][Math.floor(Math.random() * 3)]
+          });
+        }
+      }
+    }
+
+    // 정렬
+    mockEvents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    // 페이징
+    const itemsPerPage = 30;
+    const totalPages = Math.ceil(mockEvents.length / itemsPerPage);
+    const startIndex = (page - 1) * itemsPerPage;
+    const paginatedEvents = mockEvents.slice(startIndex, startIndex + itemsPerPage);
+
+    return {
+      events: paginatedEvents,
+      totalPages
+    };
   }
 }
 
-// 히스토리 유틸리티 함수들
+// ============================================
+// 🛠️ 유틸리티 클래스
+// ============================================
+
 export class HistoryUtils {
-  // 날짜 포맷팅
-  static formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).replace(/\./g, '-').replace(/ /g, '');
+  // 날짜를 YYYY-MM-DD 형식으로 포맷
+  static formatDateToString(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
-  // 타임스탬프 포맷팅
+  // Date 또는 string 모두 받는 formatDate 함수 추가
+  static formatDate(date: Date | string): string {
+    if (typeof date === 'string') {
+      return date; // 이미 YYYY-MM-DD 형식이라고 가정
+    }
+    return this.formatDateToString(date);
+  }
+
+  // 타임스탬프를 로컬 시간으로 포맷
   static formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);
     return date.toLocaleString('ko-KR', {
@@ -238,113 +323,106 @@ export class HistoryUtils {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit',
       hour12: false
-    }).replace(/\./g, '-').replace(/,/g, '');
+    });
   }
 
-  // 상태에 따른 CSS 클래스 반환
+  // 시간만 포맷 (HH:MM)
+  static formatTimeOnly(timestamp: string): string {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  }
+
+  // 상태에 따른 CSS 클래스 반환 (누락된 함수 추가)
   static getStatusClass(status: string): string {
-    switch (status) {
-      case 'GOOD':
+    switch (status.toLowerCase()) {
+      case 'good':
         return 'statusGood';
-      case 'NORMAL':
+      case 'normal':
         return 'statusNormal';
-      case 'WARNING':
+      case 'warning':
         return 'statusWarning';
       default:
         return 'statusNormal';
     }
   }
 
-  // 센서 타입에 따른 단위 반환
-  static getSensorUnit(sensorType: string): string {
-    switch (sensorType) {
-      case 'Temperature':
+  // 상태 표시 텍스트
+  static getStatusText(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'good':
+        return 'GOOD';
+      case 'normal':
+        return 'NORMAL';
+      case 'warning':
+        return 'WARNING';
+      default:
+        return 'NORMAL';
+    }
+  }
+
+  // 센서 이름
+  static getSensorName(sensor: string): string {
+    switch (sensor.toUpperCase()) {
+      case 'TEMP':
+        return 'Temperature';
+      case 'HUMI':
+        return 'Humidity';
+      case 'GAS':
+        return 'Gas Concentration';
+      default:
+        return sensor;
+    }
+  }
+
+  // 센서 단위
+  static getSensorUnit(sensor: string): string {
+    switch (sensor.toUpperCase()) {
+      case 'TEMP':
         return '°C';
-      case 'Humidity':
+      case 'HUMI':
         return '%';
-      case 'CO Concentration':
+      case 'GAS':
         return 'ppm';
       default:
         return '';
     }
   }
 
-  // 원시 데이터를 히스토리 이벤트로 변환
-  static convertRawDataToEvents(rawData: RawDataResponse): HistoryEvent[] {
-    const events: HistoryEvent[] = [];
-    let eventIdCounter = 1;
-
-    Object.entries(rawData).forEach(([filename, dataArray]) => {
-      dataArray.forEach((data) => {
-        // Temperature 이벤트
-        events.push({
-          eventId: String(eventIdCounter++).padStart(5, '0'),
-          timestamp: data.timestamp,
-          sensorType: 'Temperature',
-          value: data.temp,
-          status: this.calculateStatus('Temperature', data.temp)
-        });
-
-        // Humidity 이벤트
-        events.push({
-          eventId: String(eventIdCounter++).padStart(5, '0'),
-          timestamp: data.timestamp,
-          sensorType: 'Humidity',
-          value: data.hum,
-          status: this.calculateStatus('Humidity', data.hum)
-        });
-
-        // Gas 이벤트
-        events.push({
-          eventId: String(eventIdCounter++).padStart(5, '0'),
-          timestamp: data.timestamp,
-          sensorType: 'CO Concentration',
-          value: data.gas,
-          status: this.calculateStatus('CO Concentration', data.gas)
-        });
-      });
-    });
-
-    // 타임스탬프 기준 내림차순 정렬
-    return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  // 오늘 날짜 가져오기
+  static getTodayString(): string {
+    return this.formatDateToString(new Date());
   }
 
-  // 센서 값에 따른 상태 계산
-  private static calculateStatus(sensorType: string, value: number): 'GOOD' | 'NORMAL' | 'WARNING' {
-    switch (sensorType) {
-      case 'Temperature':
-        if (value < 18 || value > 28) return 'WARNING';
-        if (value < 20 || value > 26) return 'NORMAL';
-        return 'GOOD';
-      
-      case 'Humidity':
-        if (value < 30 || value > 80) return 'WARNING';
-        if (value < 40 || value > 70) return 'NORMAL';
-        return 'GOOD';
-      
-      case 'CO Concentration':
-        if (value > 1000) return 'WARNING';
-        if (value > 700) return 'NORMAL';
-        return 'GOOD';
-      
-      default:
-        return 'NORMAL';
-    }
+  // 날짜 유효성 검증
+  static isValidDate(year: number, month: number, day: number): boolean {
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day;
   }
 
-  // Date 객체를 YYYY-MM-DD 문자열로 변환
-  static formatDateToString(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+  // 상대적 시간 계산
+  static getRelativeTime(timestamp: string): string {
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffMs = now.getTime() - past.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
 
-  // YYYY-MM-DD 문자열을 Date 객체로 변환
-  static parseStringToDate(dateString: string): Date {
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day);
+    if (diffMins < 1) return '방금 전';
+    if (diffMins < 60) return `${diffMins}분 전`;
+
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}시간 전`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}일 전`;
+
+    const diffWeeks = Math.floor(diffDays / 7);
+    return `${diffWeeks}주 전`;
   }
 }

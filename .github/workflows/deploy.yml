@@ -1,12 +1,17 @@
 name: Deploy to EC2 via CodeDeploy
 
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-    types: [closed]
+  # 수동 배포만 허용 (의도하지 않은 자동 배포 방지)
   workflow_dispatch:
+    inputs:
+      confirm_deployment:
+        description: '배포를 확실히 실행하시겠습니까? (yes/no)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+        - 'no'
+        - 'yes'
 
 # 워크플로우 레벨 환경 변수 정의
 env:
@@ -16,6 +21,8 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # 배포 확인이 'yes'일 때만 실행
+    if: github.event.inputs.confirm_deployment == 'yes'
     
     # Job 레벨 환경 변수 정의 (Secrets에서 가져옴)
     env:
@@ -101,9 +108,13 @@ jobs:
         rm -rf aws2-api/dist || true
         rm -rf frontend_backup/build || true
         
-        # .env 파일들이 있다면 제거 (배포 시 자동 생성되므로)
-        rm -f aws2-api/.env || true
+        # .env 파일들 제거 (배포 시 SSM에서 새로 생성되므로)
+        echo "Removing .env files before deployment..."
+        rm -f aws2-api/.env || true  
         rm -f frontend_backup/.env || true
+        
+        echo "Cleaned .env files:"
+        find . -name ".env*" || echo "No .env files found"
         
         # .env.example 파일들이 있는지 확인
         echo "Environment template files:"
@@ -283,6 +294,28 @@ jobs:
           --deployment-id ${{ env.DEPLOYMENT_ID }} \
           --query 'deploymentInfo.{Status:status,CreateTime:createTime,CompleteTime:completeTime}' \
           --output table
+        
+        # Health check 테스트 (선택사항 - EC2 공용 IP가 있는 경우)
+        echo "Basic health check (if public IP is available)..."
+        # curl -f http://YOUR_EC2_PUBLIC_IP/health || echo "Health check failed - check manually"
+
+    - name: Deployment failure notification
+      if: failure()
+      run: |
+        echo "❌ 배포 실패 알림"
+        echo "배포 ID: ${{ env.DEPLOYMENT_ID }}"
+        echo "실패 시간: $(date)"
+        echo "GitHub SHA: ${GITHUB_SHA:0:8}"
+        echo ""
+        echo "문제 해결 단계:"
+        echo "1. CodeDeploy 콘솔에서 배포 로그 확인"
+        echo "2. EC2에 SSH 접속하여 서비스 상태 확인:"
+        echo "   - pm2 list"
+        echo "   - sudo systemctl status nginx"
+        echo "   - sudo tail -f /var/log/aws2-giot-app/*.log"
+        echo "3. 수동 복구 명령어:"
+        echo "   - sudo systemctl start nginx"
+        echo "   - cd /home/ec2-user/app && pm2 start ecosystem.config.js"
 
     - name: Cleanup
       if: always()
@@ -305,10 +338,38 @@ jobs:
     steps:
     - name: Notify deployment result
       run: |
+        echo "=== 배포 결과 알림 ==="
+        echo "배포 시간: $(date)"
+        echo "Git SHA: ${GITHUB_SHA:0:8}"
+        echo "배포 상태: ${{ needs.deploy.result }}"
+        echo ""
+        
         if [ "${{ needs.deploy.result }}" == "success" ]; then
-          echo "✅ Deployment to EC2 completed successfully!"
-          echo "Application should be available at your EC2 public IP"
+          echo "✅ EC2 배포가 성공적으로 완료되었습니다!"
+          echo ""
+          echo "📊 배포된 서비스:"
+          echo "  - 백엔드: http://your-ec2-ip:3001"
+          echo "  - 프론트엔드: http://your-ec2-ip (nginx 프록시)"
+          echo "  - Health Check: http://your-ec2-ip/health"
+          echo ""
+          echo "🔧 확인 명령어:"
+          echo "  pm2 list"
+          echo "  sudo systemctl status nginx"
+        elif [ "${{ needs.deploy.result }}" == "failure" ]; then
+          echo "❌ EC2 배포가 실패했습니다!"
+          echo ""
+          echo "🚨 즉시 조치 필요:"
+          echo "1. EC2에 SSH 접속하여 서비스 수동 복구:"
+          echo "   sudo systemctl start nginx"
+          echo "   cd /home/ec2-user/app && pm2 start ecosystem.config.js"
+          echo ""
+          echo "2. 문제 진단:"
+          echo "   pm2 logs"
+          echo "   sudo journalctl -u nginx -f"
+          echo "   sudo tail -f /var/log/aws2-giot-app/*.log"
+          echo ""
+          echo "3. CodeDeploy 콘솔에서 상세 로그 확인"
         else
-          echo "❌ Deployment to EC2 failed!"
-          echo "Please check the deployment logs and AWS CodeDeploy console"
+          echo "⚠️  배포 상태가 명확하지 않습니다: ${{ needs.deploy.result }}"
+          echo "수동으로 EC2 서비스 상태를 확인하세요."
         fi

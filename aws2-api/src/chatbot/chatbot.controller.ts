@@ -9,8 +9,11 @@ import {
   HttpStatus,
   ValidationPipe,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { ApiKeyGuard } from '../common/guards/api-key.guard';
 import { ChatbotService } from './chatbot.service';
 import { ChatbotQueryDto, ChatbotResponseDto, ChatbotHealthDto } from './dto/chatbot.dto';
 
@@ -56,6 +59,7 @@ export class ChatbotController {
    *       "top_score": 95
    *     }
    */
+  @UseGuards(ThrottlerGuard, ApiKeyGuard)
   @Post('ask')
   @HttpCode(HttpStatus.OK)
   async askChatbot(

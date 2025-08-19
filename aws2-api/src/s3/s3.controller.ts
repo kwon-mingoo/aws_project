@@ -7,8 +7,11 @@ import {
   NotFoundException,
   Param,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { ApiKeyGuard } from '../common/guards/api-key.guard';
 import { S3Service } from './s3.service';
 
 @Controller('s3')
@@ -41,6 +44,7 @@ export class S3Controller {
    *       }
    *     }
    */
+  @UseGuards(ThrottlerGuard, ApiKeyGuard)
   @Get('file/last/mintrend')
   async getLastDataFromLatestMintrendFile(
     @Res({ passthrough: true }) res: Response,
@@ -122,6 +126,7 @@ export class S3Controller {
    * @apiError {Object} 400 잘못된 날짜 형식
    * @apiError {Object} 404 해당 날짜에 파일이 없음
    */
+  @UseGuards(ThrottlerGuard, ApiKeyGuard)
   @Get('history/:date')
   async getHistoryByDate(
     @Param('date') date: string,

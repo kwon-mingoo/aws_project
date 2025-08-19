@@ -26,7 +26,7 @@ export class ChatbotService {
     try {
       this.logger.log(`Processing query: ${queryDto.query.substring(0, 100)}...`);
       
-      const result = await this.executePythonScript(queryDto.query);
+      const result = await this.executePythonScript(queryDto.query, queryDto.session_id);
       
       const processingTime = (Date.now() - startTime) / 1000;
       this.logger.log(`Query processed in ${processingTime.toFixed(2)}s, mode: ${result.mode}`);
@@ -87,18 +87,26 @@ export class ChatbotService {
   /**
    * 파이썬 스크립트를 실행하고 결과를 파싱합니다
    */
-  private async executePythonScript(query: string, timeoutMs?: number): Promise<ChatbotResponseDto> {
+  private async executePythonScript(query: string, sessionId?: string, timeoutMs?: number): Promise<ChatbotResponseDto> {
     return new Promise((resolve, reject) => {
       const timeout = timeoutMs || this.timeout;
       
-      // 파이썬 프로세스 시작
-      const pythonProcess = spawn('python3', [this.pythonScriptPath, query], {
+      // 파이썬 프로세스 시작 (JSON 입력으로 변경)
+      const pythonProcess = spawn('python3', [this.pythonScriptPath], {
         cwd: join(process.cwd(), 'python-scripts'),
         env: {
           ...process.env,
           PYTHONPATH: join(process.cwd(), 'python-scripts')
         }
       });
+
+      // JSON 입력으로 query와 session_id 전달
+      const inputData = JSON.stringify({
+        query: query,
+        session_id: sessionId
+      });
+      pythonProcess.stdin.write(inputData);
+      pythonProcess.stdin.end();
 
       let stdout = '';
       let stderr = '';

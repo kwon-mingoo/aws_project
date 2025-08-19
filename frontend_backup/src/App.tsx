@@ -1,182 +1,84 @@
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * 🚀 App - 메인 애플리케이션 컴포넌트
+ * ═══════════════════════════════════════════════════════════════
+ * 
+ * 주요 기능:
+ * - 전체 애플리케이션의 라우팅 및 상태 관리
+ * - 사용자 인증 플로우 제어
+ * - 역할 기반 접근 제어 (관리자/사용자)
+ * - 세션 관리 및 지속성
+ * 
+ * 애플리케이션 플로우:
+ * 1. 🔄 로딩 화면 (3초 스플래시)
+ * 2. 🏠 메인 화면 (시작 버튼)
+ * 3. 🎭 역할 선택 (admin/user)
+ * 4. 🔐 인증 단계:
+ *    - 관리자: 이메일/비밀번호 + 2단계 인증
+ *    - 사용자: 접근 코드 입력
+ * 5. 📊 대시보드 진입 (실시간 센서 모니터링)
+ * 6. 🔄 기능 화면 이동:
+ *    - 대시보드: 센서 데이터 시각화
+ *    - 챗봇: AI 기반 질의응답
+ *    - 히스토리: 센서 데이터 이력 조회
+ * 
+ * 상태 관리:
+ * - useAppRouter 훅을 통한 중앙 집중식 상태 관리
+ * - 세션 스토리지를 통한 인증 상태 지속성
+ * - 로컬 스토리지를 통한 역할 선택 기억
+ * 
+ * 개발 도구:
+ * - 개발 환경에서 실시간 상태 디버그 정보 표시
+ * - 라우트, 역할, 인증 상태, 활성 메뉴 추적
+ */
+
 // App.tsx - 메인 애플리케이션 컴포넌트
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import AppRouter from './components/AppRouter/AppRouter';
+import { useAppRouter } from './hooks/useAppRouter';
 import './App.css';
-import LoadingScreen from './pages/Sloading/LoadingScreen';
-import MainScreen from './pages/Main/MainScreen';
-import RoleSelectionScreen from './pages/RoleSelection/RoleSelectionScreen';
-import TransitionScreen from './pages/Transition/TransitionScreen';
-import DashboardScreen from './pages/Dashboard/DashboardScreen';
-import ChatbotScreen from './pages/Chatbot/ChatbotScreen';
-import HistoryScreen from './pages/History/HistoryScreen';
 
-type AppState = 'loading' | 'main' | 'roleSelect' | 'transition' | 'dashboard' | 'chatbot' | 'history';
-
+/**
+ * 🎯 메인 애플리케이션 컴포넌트
+ * 
+ * 최상위 컴포넌트로서 전체 애플리케이션의 상태와 라우팅을 관리합니다.
+ * 모든 화면 전환과 사용자 인증 플로우가 이곳에서 제어됩니다.
+ */
 const App: React.FC = () => {
-  const [appState, setAppState] = useState<AppState>('loading');
-  const [selectedRole, setSelectedRole] = useState<'admin' | 'user' | null>(null);
-
-  // 로딩 완료 핸들러
-  const handleLoadingComplete = (redirectPath: string) => {
-    if (redirectPath === '/main' || redirectPath === '/dashboard') {
-      setAppState('main'); // 로딩 후 메인 화면으로
-    }
-  };
-
-  // 메인에서 역할 선택 화면으로 이동
-  const handleNavigateToRoleSelect = () => {
-    setAppState('roleSelect');
-  };
-
-  // 역할 선택 완료 후 전환 화면으로 이동
-  const handleRoleSelected = (role: 'admin' | 'user', _redirectPath: string) => {
-    setSelectedRole(role);
-    setAppState('transition');
-  };
-
-  // 전환 완료 후 대시보드로 이동
-  const handleTransitionComplete = () => {
-    setAppState('dashboard');
-  };
-
-  // 대시보드에서 챗봇으로 이동
-  const handleNavigateToChatbot = () => {
-    setAppState('chatbot');
-  };
-
-  // 대시보드에서 히스토리로 이동
-  const handleNavigateToHistory = () => {
-    setAppState('history');
-  };
-
-  // 챗봇에서 대시보드로 돌아가기
-  const handleNavigateBackToDashboard = () => {
-    setAppState('dashboard');
-  };
-
-  // 히스토리에서 대시보드로 돌아가기
-  const handleNavigateBackFromHistory = () => {
-    setAppState('dashboard');
-  };
-
-  // 히스토리에서 챗봇으로 이동
-  const handleNavigateFromHistoryToChatbot = () => {
-    setAppState('chatbot');
-  };
-
-  // 새로고침 감지 및 로딩 화면 재표시
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      setAppState('loading');
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
-
-  // 첫 방문 여부 확인
-  useEffect(() => {
-    const hasVisited = sessionStorage.getItem('aws_iot_visited');
-
-    // 개발 모드에서는 항상 로딩부터 시작
-    if (process.env.NODE_ENV === 'development') {
-      setAppState('loading');
-    }
-
-    // 방문 표시
-    if (!hasVisited) {
-      sessionStorage.setItem('aws_iot_visited', 'true');
-    }
-  }, []);
-
-  // ESC 키로 메인으로 돌아가기 (개발용)
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && appState !== 'loading') {
-        setAppState('main');
-      }
-    };
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [appState]);
-
-  // 현재 상태에 따른 컴포넌트 렌더링
-  const renderCurrentScreen = () => {
-    switch (appState) {
-      case 'loading':
-        return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
-
-      case 'main':
-        return <MainScreen onNavigateToDashboard={handleNavigateToRoleSelect} />;
-
-      case 'roleSelect':
-        return <RoleSelectionScreen onRoleSelected={handleRoleSelected} />;
-
-      case 'transition':
-        return (
-          <TransitionScreen
-            targetRole={selectedRole || 'admin'}
-            onTransitionComplete={handleTransitionComplete}
-          />
-        );
-
-      case 'dashboard':
-        return (
-          <DashboardScreen
-            onNavigateToChatbot={handleNavigateToChatbot}
-            onNavigateToHistory={handleNavigateToHistory}
-          />
-        ); 
-
-      case 'chatbot':
-        return <ChatbotScreen onNavigateBack={handleNavigateBackToDashboard} />;
-
-      case 'history':
-        return (
-          <HistoryScreen
-            onNavigateBack={handleNavigateBackFromHistory}
-            onNavigateToChatbot={handleNavigateFromHistoryToChatbot}
-            onNavigateToHistory={handleNavigateToHistory} 
-          />
-        );
-
-      default:
-        return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
-    }
-  };
+  /**
+   * 🔧 애플리케이션 상태 및 라우터 훅
+   * - appState: 현재 라우트, 사용자 역할, 인증 상태 등
+   * - handlers: 각종 이벤트 핸들러 함수들
+   * - navigation: 라우트 변경 및 네비게이션 함수들
+   */
+  const { appState, handlers, navigation } = useAppRouter();
 
   return (
-    <div
-      style={{
-        width: '100vw',
-        height: '100vh',
-        overflow: 'hidden',
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
-      }}
-    >
-      {renderCurrentScreen()}
-
-      {/* 개발용 상태 표시 (프로덕션에서 제거) */}
+    <div className="app">
+      {/* 🛠️ 개발 환경 전용 디버그 패널 */}
       {process.env.NODE_ENV === 'development' && (
-        <div
-          style={{
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            background: 'rgba(0,0,0,0.7)',
-            color: 'white',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            fontSize: '12px',
-            zIndex: 10000,
-          }}
-        >
-          State: {appState} | Role: {selectedRole || 'none'} | Press ESC to go to main
+        <div className="debug-info">
+          <div>Route: {appState.currentRoute}</div>         {/* 현재 활성 라우트 */}
+          <div>Role: {appState.selectedRole || 'None'}</div> {/* 선택된 사용자 역할 */}
+          <div>Auth: {appState.isAuthenticated ? 'Yes' : 'No'}</div> {/* 인증 상태 */}
+          <div>Menu: {appState.activeMenu}</div>             {/* 활성 메뉴 */}
         </div>
       )}
+      
+      {/* 🧭 중앙 라우터 컴포넌트 */}
+      {/* 
+        AppRouter가 현재 상태에 따라 적절한 화면 컴포넌트를 렌더링
+        - 상태 기반 조건부 렌더링
+        - 이벤트 핸들러 Props 전달
+        - 네비게이션 함수 제공
+      */}
+      <AppRouter 
+        appState={appState}       // 현재 애플리케이션 상태
+        handlers={handlers}       // 이벤트 핸들러 모음
+        navigation={navigation}   // 네비게이션 함수 모음
+      />
     </div>
   );
 };
 
-export default App; 
+export default App;

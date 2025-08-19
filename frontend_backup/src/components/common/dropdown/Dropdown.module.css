@@ -1,0 +1,91 @@
+/* 컨테이너(absolute 부모 기준) */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);            /* 트리거 버튼 아래쪽에 붙게 예시값 */
+  right: 0;
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* 헤더(옵션) */
+.dropdownHeader {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.dropdownTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* 목록 공통 */
+.list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: 0;
+  outline: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #111827;
+}
+.item:hover {
+  background: #f9fafb;
+}
+.itemUnread {
+  background: #f0f9ff;
+}
+.itemDanger {
+  color: #b91c1c;
+}
+.meta {
+  margin-left: auto;
+  font-size: 12px;
+  color: #6b7280;
+}
+.message {
+  display: block;
+  font-size: 14px;
+  color: #111827;
+}
+.timestamp {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* 구분선 */
+.divider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 6px 0;
+}
+
+/* 빈 상태 */
+.empty {
+  padding: 20px 14px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* 바깥 클릭 감지용 오버레이 */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 999;
+}

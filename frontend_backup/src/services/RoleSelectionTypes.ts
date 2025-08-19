@@ -1,47 +1,107 @@
-// RoleTypes.ts - 역할 선택 타입 정의
+/**
+ * RoleSelectionTypes.ts - 역할 선택 관련 타입 정의 및 API
+ * 
+ * 사용자가 관리자 또는 일반 사용자 역할을 선택할 때 사용하는
+ * 타입 정의와 API 통신 로직을 제공합니다.
+ */
+import { ENV_CONFIG } from '../config/env';
 
+/**
+ * 백엔드로 전송하는 역할 선택 요청 타입
+ */
 export interface RoleSelectRequest {
+  /** 선택한 역할 (admin: 관리자, user: 사용자) */
   role: 'admin' | 'user';
+  /** 디바이스 고유 ID */
   deviceId: string;
 }
 
+/**
+ * 백엔드에서 반환하는 역할 선택 성공 응답 타입
+ */
 export interface RoleSelectResponse {
+  /** 응답 성공 여부 (항상 true) */
   success: true;
+  /** 다음으로 이동할 페이지 경로 */
   redirect: string;
+  /** 사용자에게 표시할 메시지 */
   message: string;
 }
 
+/**
+ * 백엔드에서 반환하는 역할 선택 오류 응답 타입
+ */
 export interface RoleSelectError {
+  /** 응답 성공 여부 (항상 false) */
   success: false;
+  /** 사용자에게 표시할 오류 메시지 */
   message: string;
 }
 
+/**
+ * 서버 오류 응답 타입
+ */
 export interface ServerError {
+  /** 서버 오류 메시지 */
   error: string;
 }
 
+/**
+ * 역할 타입 정의
+ */
 export type RoleType = 'admin' | 'user';
 
+/**
+ * 역할 옵션 인터페이스 (역할 선택 화면에 표시되는 정보)
+ */
 export interface RoleOption {
+  /** 역할 타입 */
   role: RoleType;
+  /** 역할 제목 */
   title: string;
+  /** 역할 부제목 */
   subtitle: string;
+  /** 역할 대표 이미지 경로 */
   avatar: string;
+  /** 역할 선택 후 이동할 경로 */
   redirect: string;
 }
 
+/**
+ * 역할 선택 화면의 로컬 상태 관리 타입
+ */
 export interface RoleSelectState {
+  /** 현재 선택된 역할 */
   selectedRole: RoleType | null;
+  /** 로딩 상태 (역할 선택 처리 중) */
   isLoading: boolean;
+  /** 오류 메시지 */
   error: string | null;
+  /** 화면 전환 상태 */
   isTransitioning: boolean;
 }
 
-// 역할 선택 API 클래스
+/**
+ * 역할 선택 API 클래스
+ * 
+ * 사용자가 역할을 선택했을 때 백엔드와 통신하여
+ * 역할 정보를 전송하고 인증하는 API 로직을 제공합니다.
+ */
 export class RoleSelectAPI {
-  private static readonly API_ENDPOINT = '/api/role/select';
-  private static readonly REQUEST_DELAY = 500; // 중복 클릭 방지
+  /** 역할 선택 API 엔드포인트 */
+  private static readonly API_ENDPOINT = `${ENV_CONFIG.API_BASE_URL}/api/role/select`;
+  /** 중복 요청 방지를 위한 지연 시간 (밀리초) */
+  private static readonly REQUEST_DELAY = 500;
 
+  /**
+   * 역할 선택 API 호출
+   * 
+   * 사용자가 선택한 역할을 백엔드로 전송하여 인증하고
+   * 다음 페이지 이동 정보를 수신합니다.
+   * 
+   * @param role 선택한 역할 ('admin' 또는 'user')
+   * @returns Promise<RoleSelectResponse | RoleSelectError | ServerError> 역할 선택 결과
+   */
   static async selectRole(role: RoleType): Promise<RoleSelectResponse | RoleSelectError | ServerError> {
     try {
       const deviceId = this.getDeviceId();
@@ -68,8 +128,7 @@ export class RoleSelectAPI {
 
       return await response.json();
     } catch (error) {
-      console.error('역할 선택 API 오류:', error);
-      
+      // 에러 타입별 처리
       if (error instanceof Error) {
         if (error.message === 'server_error') {
           return {
@@ -85,7 +144,14 @@ export class RoleSelectAPI {
     }
   }
 
-  // 디바이스 ID 생성/가져오기
+  /**
+   * 디바이스 ID 생성 및 가져오기
+   * 
+   * 로컬 스토리지에서 디바이스 ID를 가져오거나,
+   * 없을 경우 새로 생성하여 저장합니다.
+   * 
+   * @returns 디바이스 고유 ID
+   */
   private static getDeviceId(): string {
     let deviceId = localStorage.getItem('device_id');
     
@@ -97,7 +163,15 @@ export class RoleSelectAPI {
     return deviceId;
   }
 
-  // 개발용 목 응답 생성
+  /**
+   * 개발용 목 응답 데이터 생성
+   * 
+   * 백엔드 API가 준비되지 않았을 때 사용하는 목 데이터입니다.
+   * 실제 운영 환경에서는 사용하지 마세요.
+   * 
+   * @param role 선택한 역할
+   * @returns Promise<RoleSelectResponse> 목 역할 선택 응답
+   */
   static generateMockResponse(role: RoleType): Promise<RoleSelectResponse> {
     return new Promise((resolve) => {
       setTimeout(() => {

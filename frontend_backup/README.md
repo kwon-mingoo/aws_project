@@ -37,7 +37,7 @@ GET  /api/dashboard/quicksight-embed  # QuickSight 임베드 URL
 ### 환경변수 설정
 ```bash
 # 백엔드 API 서버 주소
-REACT_APP_API_BASE=https://your-api-server.com
+REACT_APP_API_BASE_URL=https://your-api-server.com
 ```
 
 ## 개발 환경 설정
@@ -153,7 +153,7 @@ Access-Control-Allow-Headers: Content-Type, Accept
 ### 일반적인 문제들
 
 1. **API 연결 실패**
-   - 환경변수 `REACT_APP_API_BASE` 확인
+   - 환경변수 `REACT_APP_API_BASE_URL` 확인
    - 백엔드 서버 상태 및 CORS 설정 점검
 
 2. **빌드 실패**

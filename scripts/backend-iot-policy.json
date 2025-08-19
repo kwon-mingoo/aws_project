@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Publish"
+      ],
+      "Resource": [
+        "arn:aws:iot:ap-northeast-2:070561229682:topic/device/control/*",
+        "arn:aws:iot:ap-northeast-2:070561229682:topic/airwatch/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Connect"
+      ],
+      "Resource": "arn:aws:iot:ap-northeast-2:070561229682:client/backend-*"
+    }
+  ]
+}

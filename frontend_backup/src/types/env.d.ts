@@ -7,7 +7,8 @@
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      readonly REACT_APP_API_BASE?: string;
+      readonly REACT_APP_API_BASE_URL?: string;
+      readonly NODE_ENV: 'development' | 'production' | 'test';
     }
   }
 
@@ -18,7 +19,8 @@ declare global {
   
   var process: {
     env: {
-      REACT_APP_API_BASE?: string;
+      REACT_APP_API_BASE_URL?: string;
+      NODE_ENV: 'development' | 'production' | 'test';
       [key: string]: string | undefined;
     };
   };

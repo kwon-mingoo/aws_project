@@ -8,8 +8,11 @@ import {
   Param,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { ApiKeyGuard } from '../common/guards/api-key.guard';
 import { QuickSightService } from './quicksight.service';
 
 @Controller('quicksight')
@@ -73,6 +76,7 @@ export class QuickSightController {
    * @apiError {Object} 400 지원하지 않는 센서 타입
    * @apiError {Object} 404 해당 타입의 대시보드를 찾을 수 없음
    */
+  @UseGuards(ThrottlerGuard, ApiKeyGuard)
   @Get('dashboards/:type')
   async getDashboardByType(
     @Param('type') type: string,
@@ -219,6 +223,7 @@ export class QuickSightController {
    *       "region": "ap-northeast-2"
    *     }
    */
+  @UseGuards(ThrottlerGuard, ApiKeyGuard)
   @Get('config')
   getConfig() {
     return this.quickSightService.getAccountInfo();

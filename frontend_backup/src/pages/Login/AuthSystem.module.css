@@ -1,0 +1,553 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, #root { /* 프로젝트 전역에서 이미 설정했다면 생략 가능 */
+  min-height: 100vh;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Geometric background pattern */
+.backgroundPattern {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.backgroundPattern svg {
+  width: 100%;
+  height: 100%;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logoText {
+  font-size: 48px;
+  font-weight: 900;
+  color: #2c3e50;
+  letter-spacing: -2px;
+}
+
+.logoGiot {
+  position: relative;
+  font-size: 48px;
+  font-weight: 900;
+  color: #2c3e50;
+}
+
+.wifiIcon {
+  position: absolute;
+  top: -8px;
+  right: 60px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f39c12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wifiIcon::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border: 2px solid white;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+}
+
+.subtitle {
+  color: #f39c12;
+  font-size: 20px;
+  font-weight: 300;
+  margin-top: 5px;
+}
+
+.authContainer {
+  display: flex;
+  gap: 0;
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  min-height: 500px;
+}
+
+.authPanel {
+  width: 300px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.sidePanel {
+  width: 250px;
+  background: #f39c12;
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  position: relative;
+}
+.sidePanel::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 20px solid #f39c12;
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+}
+
+/* 뒤로가기 버튼 스타일 */
+.backButton {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: none;
+  border: none;
+  color: #7f8c8d;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.backButton:hover:not(:disabled) {
+  color: #2c3e50;
+  background: #f8f9fa;
+}
+
+.backButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 역할 표시기 스타일 */
+.roleIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #f39c12;
+}
+
+.roleLabel {
+  font-size: 12px;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.roleValue {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: white;
+}
+
+.roleValue.admin {
+  background: #2c3e50;
+}
+
+.roleValue.user {
+  background: #f39c12;
+}
+
+.authTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.authSubtitle {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin-bottom: 30px;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formLabel {
+  display: block;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.formInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e8ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+.formInput:focus {
+  outline: none;
+  border-color: #f39c12;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+}
+.formInput.filled {
+  background: white;
+  border-color: #27ae60;
+}
+
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 25px;
+}
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #f39c12;
+}
+.checkboxLabel {
+  font-size: 14px;
+  color: #7f8c8d;
+  cursor: pointer;
+}
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.btnPrimary {
+  background: #2c3e50;
+  color: white;
+}
+.btnPrimary:hover:not(:disabled) {
+  background: #34495e;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(44, 62, 80, 0.3);
+}
+.btnSecondary {
+  background: #f39c12;
+  color: white;
+}
+.btnSecondary:hover:not(:disabled) {
+  background: #e67e22;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+}
+.btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.forgotPassword {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 12px;
+  margin-left: auto;
+}
+.forgotPassword:hover {
+  text-decoration: underline;
+}
+
+.createAccount {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+.createAccount a {
+  color: #3498db;
+  text-decoration: none;
+}
+.createAccount a:hover {
+  text-decoration: underline;
+}
+
+.footer {
+  position: absolute;
+  bottom: 20px;
+  color: #7f8c8d;
+  font-size: 14px;
+  font-weight: 300;
+}
+
+.errorMessage {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 5px;
+  padding: 8px 12px;
+  background: #fdf2f2;
+  border-radius: 4px;
+  border-left: 3px solid #e74c3c;
+}
+.successMessage {
+  color: #27ae60;
+  font-size: 12px;
+  margin-top: 5px;
+  padding: 8px 12px;
+  background: #f0fdf4;
+  border-radius: 4px;
+  border-left: 3px solid #27ae60;
+}
+
+/* Code verification specific styles */
+.codeInput {
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 4px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+.requestCode {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+.requestCode a {
+  color: #3498db;
+  text-decoration: none;
+}
+.requestCode a:hover {
+  text-decoration: underline;
+}
+
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* 로딩 애니메이션 개선 */
+.loading .authPanel::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 역할별 테마 색상 */
+.authPanel .roleValue.admin + * .btnPrimary {
+  background: #1f2937;
+}
+
+.authPanel .roleValue.admin + * .btnPrimary:hover:not(:disabled) {
+  background: #374151;
+}
+
+.authPanel .roleValue.user + * .btnPrimary {
+  background: #f39c12;
+}
+
+.authPanel .roleValue.user + * .btnPrimary:hover:not(:disabled) {
+  background: #e67e22;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .authContainer {
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+  }
+  .sidePanel {
+    width: 100%;
+    height: 100px;
+  }
+  .sidePanel::before {
+    display: none;
+  }
+  .authPanel {
+    width: 100%;
+    padding: 30px 20px;
+  }
+  
+  .backButton {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin-bottom: 15px;
+    align-self: flex-start;
+  }
+  
+  .roleIndicator {
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    margin-bottom: 20px;
+  }
+  
+  .logoText, .logoGiot {
+    font-size: 36px;
+  }
+  
+  .subtitle {
+    font-size: 16px;
+  }
+  
+  .authPanel {
+    padding: 20px 15px;
+  }
+  
+  .authTitle {
+    font-size: 20px;
+  }
+  
+  .authSubtitle {
+    font-size: 13px;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  }
+  
+  .authContainer {
+    background: #2d2d2d;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+  
+  .authTitle {
+    color: #ffffff;
+  }
+  
+  .authSubtitle {
+    color: #a0a0a0;
+  }
+  
+  .formLabel {
+    color: #ffffff;
+  }
+  
+  .formInput {
+    background: #3a3a3a;
+    border-color: #4a4a4a;
+    color: #ffffff;
+  }
+  
+  .formInput:focus {
+    background: #4a4a4a;
+  }
+  
+  .roleIndicator {
+    background: #3a3a3a;
+    border-left-color: #f39c12;
+  }
+  
+  .roleLabel {
+    color: #a0a0a0;
+  }
+}
+
+/* 접근성 개선 */
+.formInput:focus,
+.btn:focus,
+.backButton:focus {
+  outline: 2px solid #f39c12;
+  outline-offset: 2px;
+}
+
+/* 애니메이션 효과 */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.authContainer {
+  animation: slideIn 0.5s ease-out;
+}
+
+.roleIndicator {
+  animation: slideIn 0.5s ease-out 0.2s both;
+}
+
+/* 성공 상태 애니메이션 */
+@keyframes successPulse {
+  0% {
+    background: #f0fdf4;
+    border-left-color: #27ae60;
+  }
+  50% {
+    background: #dcfce7;
+    border-left-color: #16a34a;
+  }
+  100% {
+    background: #f0fdf4;
+    border-left-color: #27ae60;
+  }
+}
+
+.successMessage {
+  animation: successPulse 2s ease-in-out;
+}

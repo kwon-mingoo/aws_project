@@ -1,0 +1,204 @@
+/* Sidebar.module.css - 공통 사이드바 스타일 */
+
+/* 사이드바 컨테이너 */
+.sidebar {
+  width: 280px;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-right: 1px solid rgba(71, 85, 105, 0.3);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  z-index: 100;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 사이드바 헤더 */
+.sidebarHeader {
+  padding: 32px 24px 24px;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.2);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.sidebarTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+  text-align: center;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 사이드바 메뉴 */
+.sidebarMenu {
+  flex: 1;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+/* 사이드바 메뉴 아이템 */
+.sidebarItem {
+  width: 100%;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebarItem::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
+}
+
+.sidebarItem:hover {
+  color: #f1f5f9;
+  background: rgba(59, 130, 246, 0.1);
+  transform: translateX(4px);
+}
+
+.sidebarItem:hover::before {
+  opacity: 1;
+}
+
+.sidebarItem:active {
+  transform: translateX(2px) scale(0.98);
+}
+
+/* 활성 상태 */
+.sidebarItemActive {
+  color: #ffffff;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  box-shadow: 
+    0 4px 12px rgba(59, 130, 246, 0.4),
+    0 2px 8px rgba(139, 92, 246, 0.3);
+  transform: translateX(4px);
+}
+
+.sidebarItemActive::before {
+  opacity: 0;
+}
+
+.sidebarItemActive:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  box-shadow: 
+    0 6px 16px rgba(59, 130, 246, 0.5),
+    0 4px 12px rgba(139, 92, 246, 0.4);
+  transform: translateX(6px);
+}
+
+/* 아이콘 스타일 */
+.sidebarItem svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.sidebarItem:hover svg,
+.sidebarItemActive svg {
+  opacity: 1;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 260px;
+  }
+  
+  .sidebarHeader {
+    padding: 24px 20px 20px;
+  }
+  
+  .sidebarTitle {
+    font-size: 1.5rem;
+  }
+  
+  .sidebarMenu {
+    padding: 20px 12px;
+  }
+  
+  .sidebarItem {
+    padding: 14px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 240px;
+  }
+  
+  .sidebarItem {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  
+  .sidebarItem svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* 스크롤바 스타일 */
+.sidebarMenu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebarMenu::-webkit-scrollbar-track {
+  background: rgba(71, 85, 105, 0.2);
+  border-radius: 2px;
+}
+
+.sidebarMenu::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 2px;
+}
+
+.sidebarMenu::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* 접근성 */
+.sidebarItem:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 다크 모드 추가 지원 */
+@media (prefers-color-scheme: dark) {
+  .sidebar {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+  
+  .sidebarHeader {
+    background: rgba(2, 6, 23, 0.7);
+  }
+  
+  .sidebarTitle {
+    color: #f1f5f9;
+  }
+}
