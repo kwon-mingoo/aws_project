@@ -736,9 +736,41 @@ def calculate_daily_average_all_sensors(query: str):
         year = datetime_cls.now().year
         month, day = int(date_match.group(1)), int(date_match.group(2))
     elif "오늘" in query:
-        # "오늘" 키워드인 경우 현재 날짜 사용
-        now = datetime_cls.now()
-        year, month, day = now.year, now.month, now.day
+        # "오늘" 키워드인 경우 실제 houravg 데이터가 있는 가장 최근 날짜 찾기
+        s3_temp = boto3.client("s3", region_name=REGION)
+        paginator_temp = s3_temp.get_paginator("list_objects_v2")
+        
+        # 현재부터 과거로 최대 30일까지 검색
+        found_date = None
+        for days_back in range(30):
+            check_date = datetime_cls.now() - timedelta(days=days_back)
+            check_year, check_month, check_day = check_date.year, check_date.month, check_date.day
+            
+            # 해당 날짜의 houravg 데이터 존재 여부 확인
+            search_prefix = f"{S3_PREFIX}houravg/{check_year:04d}/{check_month:02d}/{check_day:02d}/"
+            try:
+                pages = paginator_temp.paginate(
+                    Bucket=S3_BUCKET_DATA, 
+                    Prefix=search_prefix, 
+                    PaginationConfig={'MaxItems': 1}
+                )
+                for page in pages:
+                    if page.get("Contents"):
+                        found_date = (check_year, check_month, check_day)
+                        break
+                if found_date:
+                    break
+            except:
+                continue
+        
+        if found_date:
+            year, month, day = found_date
+            print(f"[DEBUG] 오늘 키워드 - 찾은 날짜: {year}-{month:02d}-{day:02d}")
+        else:
+            # 데이터를 찾지 못한 경우 현재 날짜 사용
+            now = datetime_cls.now()
+            year, month, day = now.year, now.month, now.day
+            print(f"[DEBUG] 오늘 키워드 - 데이터 없음, 현재 날짜 사용: {year}-{month:02d}-{day:02d}")
     elif "어제" in query:
         # "어제" 키워드인 경우 현재 날짜에서 1일 빼기
         yesterday = datetime_cls.now() - timedelta(days=1)
@@ -1433,7 +1465,7 @@ def _deterministic_sensor_signal(query: str) -> bool:
 def decide_route(query: str) -> str:
     # UTF-8 문제 해결을 위한 간단한 센서 감지 (장소 키워드 포함)
     sensor_keywords = ["온도", "습도", "CO2", "이산화탄소", "공기질", "센서", "강의실", "실내", "실온", "방안", "교실", "사무실"]
-    time_keywords = ["시", "분", "일", "월", "년", "전", "후", "오전", "오후"]
+    time_keywords = ["시", "분", "일", "월", "년", "전", "후", "오전", "오후", "현재", "지금", "최근", "오늘", "어제"]
     
     has_sensor = any(keyword in query for keyword in sensor_keywords)
     has_time = any(keyword in query for keyword in time_keywords)
@@ -1995,11 +2027,8 @@ def retrieve_documents_from_s3(query: str, limit_chars: int = LIMIT_CONTEXT_CHAR
             return [no_data_doc], f"[N1] {no_data_message}\n"
     
     elif is_daily_avg_query:
-        # "오늘" 질문은 전용 함수 사용 (원본 질의 기준)
-        if "오늘" in original_query:
-            daily_avg_data = calculate_today_average_all_sensors()
-        else:
-            daily_avg_data = calculate_daily_average_all_sensors(original_query)
+        # 모든 일간 평균 질문은 동일한 로직 사용
+        daily_avg_data = calculate_daily_average_all_sensors(original_query)
         if daily_avg_data:
             # 후속 질문용 컨텍스트 저장
             context_data = {
@@ -2034,6 +2063,19 @@ def retrieve_documents_from_s3(query: str, limit_chars: int = LIMIT_CONTEXT_CHAR
             }
             
             return [top_doc], context
+        else:
+            # 일간 평균 데이터를 찾지 못한 경우
+            no_data_message = f"요청하신 날짜의 일간 평균 데이터를 찾을 수 없습니다. 해당 날짜에 센서 데이터가 없거나 부족할 수 있습니다."
+            
+            no_data_doc = {
+                'score': 90,
+                'schema': 'no_daily_avg_data',
+                'content': no_data_message,
+                'id': 'no_daily_avg_data',
+                'tag': 'N2'
+            }
+            
+            return [no_data_doc], f"[N2] {no_data_message}\n"
     
     # 1) 시간 정보 추출
     dt_strings = extract_datetime_strings(query)
