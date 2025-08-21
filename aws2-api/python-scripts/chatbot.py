@@ -182,6 +182,21 @@ def detect_fields_in_query(raw_query: str):
 # ===== 날짜/시간 파싱 =====
 ISO_PAT = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?"
 def extract_datetime_strings(s: str):
+    def _is_less_specific(time1, time2):
+        """time1이 time2보다 덜 구체적인지 확인"""
+        # 시간 부분 추출
+        t1_part = time1[11:] if len(time1) > 11 else "00:00"  # "HH:MM"
+        t2_part = time2[11:] if len(time2) > 11 else "00:00"
+        
+        # 구체성 점수 계산
+        def get_score(time_part):
+            if time_part.endswith(":00"):
+                return 0 if time_part == "00:00" else 1  # 날짜만:0, 시간까지:1
+            else:
+                return 2  # 분까지:2
+        
+        return get_score(t1_part) < get_score(t2_part)
+    
     out = []
     out += re.findall(ISO_PAT, s)  # ISO8601
     patterns = [
@@ -262,7 +277,23 @@ def extract_datetime_strings(s: str):
                     mi = int(groups[3]) if len(groups) > 3 and groups[3] else 0
                 
                 time_str = f"{y:04d}-{mo:02d}-{d:02d} {h:02d}:{mi:02d}"
-                if time_str not in all_matches:  # 중복 제거
+                
+                # 더 효과적인 중복 제거: 같은 날짜의 덜 구체적인 시간 제거
+                date_key = f"{y:04d}-{mo:02d}-{d:02d}"
+                
+                # 기존 매칭 중 같은 날짜의 덜 구체적인 것들 제거
+                all_matches = [existing for existing in all_matches 
+                             if not (existing.startswith(date_key) and 
+                                   _is_less_specific(existing, time_str))]
+                
+                # 현재 시간이 기존 매칭보다 구체적이거나 같은 경우에만 추가
+                should_add = True
+                for existing in all_matches:
+                    if existing.startswith(date_key) and _is_less_specific(time_str, existing):
+                        should_add = False
+                        break
+                
+                if should_add and time_str not in all_matches:
                     all_matches.append(time_str)
                     
             except (ValueError, IndexError):
@@ -765,12 +796,12 @@ def calculate_daily_average_all_sensors(query: str):
         
         if found_date:
             year, month, day = found_date
-            print(f"[DEBUG] 오늘 키워드 - 찾은 날짜: {year}-{month:02d}-{day:02d}")
+            #print(f"[DEBUG] 오늘 키워드 - 찾은 날짜: {year}-{month:02d}-{day:02d}")
         else:
             # 데이터를 찾지 못한 경우 현재 날짜 사용
             now = datetime_cls.now()
             year, month, day = now.year, now.month, now.day
-            print(f"[DEBUG] 오늘 키워드 - 데이터 없음, 현재 날짜 사용: {year}-{month:02d}-{day:02d}")
+            #print(f"[DEBUG] 오늘 키워드 - 데이터 없음, 현재 날짜 사용: {year}-{month:02d}-{day:02d}")
     elif "어제" in query:
         # "어제" 키워드인 경우 현재 날짜에서 1일 빼기
         yesterday = datetime_cls.now() - timedelta(days=1)
@@ -995,7 +1026,8 @@ def is_recent_query(query: str) -> bool:
     # 후속질문 패턴들은 제외해야 함
     followup_patterns = [
         r'최근\s*말한', r'가장\s*최근\s*말한', r'방금\s*말한', r'이전에\s*말한',
-        r'아까\s*말한', r'바로\s*전에\s*말한', r'말한\s*시간', r'시간대'
+        r'아까\s*말한', r'바로\s*전에\s*말한', r'말한\s*시간', r'시간대',
+        r'그럼', r'그러면', r'그때', r'해당', r'동일', r'같은', r'위의', r'앞의'
     ]
     
     # 후속질문 패턴이 있으면 recent query가 아님
@@ -2078,7 +2110,10 @@ def retrieve_documents_from_s3(query: str, limit_chars: int = LIMIT_CONTEXT_CHAR
             return [no_data_doc], f"[N2] {no_data_message}\n"
     
     # 1) 시간 정보 추출
+    #print(f"[DEBUG-MAIN] query: {query}")
     dt_strings = extract_datetime_strings(query)
+    #print(f"[DEBUG-MAIN] extract_datetime_strings 결과: {dt_strings}")
+    #print(f"[DEBUG-MAIN] dt_strings 길이: {len(dt_strings)}")
     
     # UTF-8 문제로 인한 fallback 시간 추출
     if not dt_strings:
@@ -2199,6 +2234,7 @@ def retrieve_documents_from_s3(query: str, limit_chars: int = LIMIT_CONTEXT_CHAR
     
     
     offset_value, offset_unit = extract_time_offset(query)
+    #print(f"[DEBUG-MAIN] offset_value: {offset_value}, offset_unit: {offset_unit}")
     
     # 2) 대상 시간 계산
     target_dt = None
@@ -2242,6 +2278,7 @@ def retrieve_documents_from_s3(query: str, limit_chars: int = LIMIT_CONTEXT_CHAR
                 target_dt = base_dt
     elif dt_strings and len(dt_strings) > 1:
         # 복수 시간 처리 (범위 쿼리 등)
+        #print(f"[DEBUG-MAIN] 복수 시간 처리 경로")
         
         # 가장 구체적인 시간이 있으면 단일 시간으로 처리 (예: "13시 5분"의 경우)
         gran = requested_granularity(query)
@@ -2441,8 +2478,12 @@ def retrieve_documents_from_s3(query: str, limit_chars: int = LIMIT_CONTEXT_CHAR
                 return all_docs, context
     elif dt_strings:
         # 단일 시간 처리
+        #print(f"[DEBUG-MAIN] 단일 시간 처리 경로")
+        #print(f"[DEBUG-RETRIEVE] dt_strings: {dt_strings}")
+        #print(f"[DEBUG-RETRIEVE] dt_strings[0]: {dt_strings[0]}")
         
         target_dt = parse_dt(dt_strings[0])
+        #print(f"[DEBUG-RETRIEVE] parse_dt 결과: {target_dt}")
         if target_dt:
             gran = requested_granularity(query)
             
@@ -2642,12 +2683,14 @@ def retrieve_documents_from_s3(query: str, limit_chars: int = LIMIT_CONTEXT_CHAR
     
     # 쿼리에서 날짜 추출 (상대 시간이 아닌 경우)
     if not date_prefixes:
+        #print(f"[DEBUG-MAIN] date_prefixes 비어있음, dt_strings에서 추출 시도")
         for ds in dt_strings:
             dt = parse_dt(ds)
             if dt:
                 target_dt = dt
                 date_prefix = dt.strftime('%Y%m%d')  # YYYYMMDD 형식
                 date_prefixes.append(date_prefix)
+                #print(f"[DEBUG-MAIN] 추출된 target_dt: {target_dt}, date_prefix: {date_prefix}")
                 break
     
     gran = requested_granularity(query)
@@ -3414,6 +3457,10 @@ def expand_followup_query_with_last_window(query: str, session=None) -> str:
         #print(f"[DEBUG-FOLLOWUP] 일간 평균 질문으로 확장 안함")
         return query
     
+    # "지금" 키워드가 있는 경우 최신 데이터 요청으로 처리 (후속질문이 아님)
+    if "지금" in query or "현재" in query:
+        return query
+    
     # 후속질문 힌트가 없고 센서 질문인 경우, 독립적인 센서 질문으로 처리
     if not has_followup_hint and is_sensor_query:
         return query
@@ -3802,6 +3849,9 @@ def chat_loop(session=None):
             is_multiple_time_query = len(dt_strings) > 1
             
             cached_sensor_data = None if is_multiple_time_query else find_sensor_data_from_s3_logs(query)
+            #print(f"[DEBUG-CACHE] S3 로그 캐시 검색 결과: {cached_sensor_data is not None}")
+            #if cached_sensor_data:
+                #print(f"[DEBUG-CACHE] 캐시된 데이터 timestamp: {cached_sensor_data.get('timestamp', 'No timestamp')}")
             
             if cached_sensor_data:
                 # S3 로그에서 데이터를 찾은 경우
@@ -3853,8 +3903,12 @@ def chat_loop(session=None):
                     continue
 
             # 3) S3 로그에 없으면 기존 방식으로 센서 확정 → S3 검색
+            #print(f"[DEBUG-S3] S3 직접 검색 시작")
             top_docs, context = retrieve_documents_from_s3(query, session=session)
+            #print(f"[DEBUG-S3] S3 검색 완료, 결과 개수: {len(top_docs) if top_docs else 0}")
             if top_docs:
+                #print(f"[DEBUG-DOCS] top_docs[0] id: {top_docs[0].get('id', 'No id')}")
+                #print(f"[DEBUG-DOCS] top_docs[0] score: {top_docs[0].get('score', 'No score')}")
                 pass
 
             # 4) 센서 질의는 항상 RAG + LLM 모드로 처리
@@ -3871,6 +3925,7 @@ def chat_loop(session=None):
             if use_rag:
                 # 세션별 히스토리 사용
                 current_history = session.history if session else HISTORY
+                #print(f"[DEBUG-RAG] 사용할 context: {context[:200]}...")  # 첫 200자만 출력
                 prompt = build_prompt(query, context, history=current_history)
                 
                 # RAG 센서 질문에서 타임스탬프 추출해서 후속질문용으로 저장 (세션별)
